@@ -1,5 +1,5 @@
 /* WK Coach service worker — offline shell */
-const C='wk-coach-v3';
+const C='wk-coach-v5';
 const ASSETS=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./icon-180.png'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(C).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));

@@ -1250,5 +1250,258 @@ render=function(){_r4();const V=document.getElementById('view');
  else V.classList.remove('swap');};
 render();
 </script>
+<style>
+/* ============ v5 — GLASS DASHBOARD ============ */
+/* hero — today at a glance, centered, large */
+.hero{text-align:center;padding:24px 16px 18px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;left:-20%;right:-20%;top:-42%;height:74%;pointer-events:none;
+ background:radial-gradient(50% 62% at 50% 30%,var(--acg,rgba(255,122,47,.22)),transparent 72%)}
+.h-eyebrow{font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);font-weight:600;position:relative}
+.h-icw{width:80px;height:80px;margin:14px auto 10px;border-radius:26px;display:flex;align-items:center;justify-content:center;
+ color:var(--ac);position:relative;
+ background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.02)),rgba(16,21,29,.6);
+ border:1px solid var(--ac);
+ box-shadow:0 12px 34px -12px var(--acg,rgba(255,122,47,.5)),inset 0 1px 0 rgba(255,255,255,.14)}
+.h-icw svg{width:46px;height:46px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.h-title{font-family:'Barlow Condensed';font-weight:700;font-size:2.1rem;line-height:1.02;text-transform:uppercase;
+ letter-spacing:.03em;margin:2px 0 4px;position:relative}
+.h-sub{color:var(--ink);font-size:.87rem;max-width:36ch;margin:0 auto;position:relative}
+.h-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0;position:relative}
+.vpill{display:inline-block;padding:4px 13px;border-radius:999px;font-weight:700;font-size:.7rem;letter-spacing:.09em}
+.vpill.green{background:rgba(76,195,138,.15);color:var(--green);border:1px solid var(--green)}
+.vpill.amber{background:rgba(233,180,76,.15);color:var(--amber);border:1px solid var(--amber)}
+.vpill.red{background:rgba(229,72,77,.15);color:var(--red);border:1px solid var(--red)}
+.vpill.grey{background:rgba(255,255,255,.05);color:var(--ink);border:1px solid var(--line)}
+.hero .btn{position:relative}
+.hero .btn.acbtn{background:linear-gradient(180deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));
+ border-color:color-mix(in srgb,var(--ac) 60%,#fff);color:#10141B;font-weight:700;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 8px 24px -8px var(--acg,rgba(255,122,47,.55))}
+/* 7-day strip */
+.wk7{display:flex;gap:6px;margin-bottom:12px}
+.wk7 .wd{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;
+ border-radius:14px;background:rgba(27,35,48,.6);border:1px solid rgba(255,255,255,.06)}
+.wk7 .dw{font-size:.54rem;color:var(--ink);letter-spacing:.08em;font-weight:600}
+.wk7 .dn{font-family:'Barlow Condensed';font-weight:700;font-size:1.08rem;line-height:1}
+.wk7 .dot{width:6px;height:6px;border-radius:50%;background:var(--ac);margin-top:1px}
+.wk7 .now{border-color:var(--ac);background:rgba(35,45,61,.85);
+ box-shadow:0 0 0 1px var(--ac),0 8px 20px -10px var(--acg,rgba(255,122,47,.6))}
+.wk7 .ok{position:absolute;top:3px;right:5px;font-size:.58rem;color:var(--green);font-weight:800}
+/* morning gate — activity rings */
+.g5{display:flex;gap:14px;align-items:center}
+.gring{width:114px;height:114px;flex:0 0 auto;display:block}
+.gdim{opacity:.32}
+.g5r{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.g5row{display:flex;align-items:center;gap:8px;background:rgba(16,21,29,.55);
+ border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:6px 8px}
+.g5row .lab{font-size:.58rem;text-transform:uppercase;letter-spacing:.09em;flex:1;font-weight:700;line-height:1.15}
+.g5row .val{font-family:'Barlow Condensed';font-weight:700;font-size:1.4rem;min-width:32px;text-align:center}
+.g5row button{width:32px;height:32px;border:1px solid var(--glass-brd);border-radius:10px;
+ background:var(--paint-2);font-weight:700;font-size:1.05rem;color:var(--ink);flex:0 0 auto}
+#view.swap .gring .arc{animation:ringIn .95s cubic-bezier(.22,1,.36,1) both}
+@keyframes ringIn{from{stroke-dashoffset:var(--c)}to{stroke-dashoffset:var(--o)}}
+/* session color identity */
+.sic{width:46px;height:46px;border-radius:15px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+ color:var(--ac);background:rgba(16,21,29,.6);border:1px solid var(--ac);
+ box-shadow:0 6px 16px -8px var(--acg,transparent)}
+.sic svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.strow{display:flex;gap:12px;align-items:center}
+.btn.acc{border-color:var(--ac);color:var(--ac);background:rgba(16,21,29,.5)}
+.cal .day{border-left:3px solid var(--ac)}
+.cal .day.today{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
+.sesswrap .grp{border-left-color:var(--ac)}
+.sesswrap .grp .gt,.sesswrap .ex .xt,.sesswrap .drill .dv{color:var(--ac)}
+.sesswrap .chip.on{border-color:var(--ac);color:var(--ac)}
+</style>
+<script>
+/* ============ v5 module — glanceable dashboard, color system, nav sync ============ */
+/* per-assignment colour + icon identity */
+const KMETA={
+ GAME:{c:'#FF6B52',g:'rgba(255,107,82,.5)',i:'ball'},
+ A:{c:'#FF7A2F',g:'rgba(255,122,47,.5)',i:'bar'},
+ B:{c:'#4C9EE8',g:'rgba(76,158,232,.5)',i:'bar'},
+ C1:{c:'#4CC38A',g:'rgba(76,195,138,.5)',i:'hoop'},
+ C2:{c:'#38C2B8',g:'rgba(56,194,184,.5)',i:'board'},
+ MOB:{c:'#A78BFA',g:'rgba(167,139,250,.5)',i:'wave'},
+ REC:{c:'#5AC8FA',g:'rgba(90,200,250,.5)',i:'heart'},
+ FLOAT:{c:'#E9B44C',g:'rgba(233,180,76,.5)',i:'star'},
+ TRANS:{c:'#9BA6B8',g:'rgba(155,166,184,.4)',i:'wave'},
+ PRE:{c:'#9BA6B8',g:'rgba(155,166,184,.4)',i:'wave'},
+ D8:{c:'#F06A9C',g:'rgba(240,106,156,.5)',i:'shield'}};
+const ICO={
+ ball:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-3.5 2.5-3.5 15.5 0 18M12 3c3.5 2.5 3.5 15.5 0 18"/>',
+ bar:'<path d="M2.5 12h2m15 0h2M7 8.5v7M17 8.5v7M9.5 6v12M14.5 6v12M9.5 12h5"/>',
+ hoop:'<circle cx="12" cy="6" r="3"/><path d="M5 10.5h14M6.2 10.5l1.3 5h9L17.8 10.5M8.6 15.5l-.8 4.5M15.4 15.5l.8 4.5M9.8 10.5l.7 5M14.2 10.5l-.7 5"/>',
+ board:'<rect x="4" y="3.5" width="16" height="10.5" rx="1.5"/><rect x="9" y="6.5" width="6" height="4.5" rx="1"/><circle cx="12" cy="18" r="2.8"/>',
+ wave:'<path d="M3 15.5c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2 3 3 3M3 9.5c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2 3 3 3"/>',
+ heart:'<path d="M12 20s-7-4.6-9-9c-1.3-3 .8-6.5 4-6.5 2 0 3.5 1 5 3 1.5-2 3-3 5-3 3.2 0 5.3 3.5 4 6.5-2 4.4-9 9-9 9z"/>',
+ star:'<path d="M12 3.5l2.5 5.3 5.8.8-4.2 4 1 5.8-5.1-2.8-5.1 2.8 1-5.8-4.2-4 5.8-.8z"/>',
+ shield:'<path d="M12 3l7 3v5.2c0 4.8-3.2 8.1-7 9.8-3.8-1.7-7-5-7-9.8V6z"/><path d="M9 12l2 2 4-4"/>'};
+const icoSVG=n=>'<svg viewBox="0 0 24 24">'+(ICO[n]||ICO.ball)+'</svg>';
+const dsOf=d=>d.getFullYear()+'-'+P2(d.getMonth()+1)+'-'+P2(d.getDate());
+
+/* hero — the one-glance answer: what today is, am I cleared, when is the next tip */
+function heroCard(){const ds=todayStr(),a=assignFor(ds),fx=fixOn(ds),m=KMETA[a.k]||KMETA.PRE;
+ const g=todayGate(),v=g.touched?verdict(g):null,d=parseL(ds);
+ const phase=ds<'2026-07-19'?'IN-SEASON':(ds<=TRANS_END?'TRANSITION':'BUILD');
+ const titl=a.k==='GAME'?a.t:a.t.split('—')[0].trim();
+ let cta='';
+ if(a.k==='GAME'&&fx)cta=`<button class="btn acbtn block" data-go="proto" data-p="${fx.proto}">Open Protocol ${fx.proto} · tip ${clock(parseL(fx.d,fx.tip))}</button>`;
+ else if(SESSIONS[a.k])cta=`<button class="btn acbtn block" data-go="sess" data-s="${a.k}">Start ${SESSIONS[a.k].title.split(' — ')[0]} →</button>`;
+ else if(a.k==='FLOAT')cta=`<div class="btnrow" style="justify-content:center"><button class="btn" data-go="sess" data-s="C1">Court 1</button><button class="btn" data-go="sess" data-s="C2">Court 2</button><button class="btn ghost" data-go="sess" data-s="MOB">Mobility</button></div>`;
+ else cta=`<button class="btn block" data-go="sess" data-s="MOB">Open Mobility →</button>`;
+ const nt=nextTip();
+ const tipChip=nt?`<span class="chip">NEXT TIP · ${nt.f.d===ds?'TODAY':fmtShort(nt.f.d)} · ${clock(nt.t)}</span>`:'';
+ const vchip=v?`<span class="vpill ${v}">${v.toUpperCase()}${v==='green'?' · CLEARED':v==='amber'?' · DOWNGRADE':' · PROTECT'}</span>`
+             :'<span class="vpill grey">SET MORNING GATE ↓</span>';
+ const warn=(v&&v!=='green'&&SESSIONS[a.k])?`<div class="alertbar ${v==='red'?'red':'amber'}" style="text-align:left">${VTXT[v][1]}</div>`:'';
+ return `<section class="card raised hero" style="--ac:${m.c};--acg:${m.g}">
+  <div class="h-eyebrow">${phase} · ${DW[d.getDay()]} ${d.getDate()} ${MO[d.getMonth()]}</div>
+  <div class="h-icw">${icoSVG(m.i)}</div>
+  <h1 class="h-title">${esc(titl)}</h1>
+  <p class="h-sub">${esc(a.s)}</p>
+  <div class="h-chips">${vchip}${tipChip}</div>${warn}${cta}</section>`;}
+
+/* 7-day colour-coded strip (yesterday + 6 ahead) */
+function weekStrip(){const t=parseL(todayStr());let out='<div class="wk7" id="wk7" role="button" aria-label="Open block calendar">';
+ for(let i=-1;i<6;i++){const d=new Date(t);d.setDate(t.getDate()+i);const ds=dsOf(d);
+  const a=assignFor(ds),m=KMETA[a.k]||KMETA.PRE;
+  const done=st.logs.some(l=>l.d===ds&&l.done);
+  out+=`<div class="wd ${i===0?'now':''}" style="--ac:${m.c};--acg:${m.g}">
+   <span class="dw">${DW[d.getDay()]}</span><span class="dn num">${d.getDate()}</span><span class="dot"></span>${done?'<span class="ok">✓</span>':''}</div>`;}
+ return out+'</div>';}
+
+/* morning gate — apple-style activity rings (outer sleep, mid soreness, inner achilles) */
+function ringSVG(g){const M=[[Math.min(1,g.sleep/9),'#5AC8FA'],[(10-g.sore)/10,'#4CC38A'],[(10-g.stiff)/10,'#FF7A2F']];
+ let s='';M.forEach((m,i)=>{const r=48-i*14,c=+(2*Math.PI*r).toFixed(1),off=+(c*(1-Math.max(0,Math.min(1,m[0])))).toFixed(1);
+  s+=`<circle cx="57" cy="57" r="${r}" stroke="rgba(255,255,255,.07)" stroke-width="11" fill="none"/>
+   <circle class="arc" cx="57" cy="57" r="${r}" stroke="${m[1]}" stroke-width="11" fill="none" stroke-linecap="round"
+    stroke-dasharray="${c}" stroke-dashoffset="${off}" style="--c:${c};--o:${off}" transform="rotate(-90 57 57)"/>`;});
+ return `<svg class="gring" viewBox="0 0 114 114" aria-label="Readiness rings">${s}</svg>`;}
+function gateCard5(){const g=todayGate(),v=g.touched?verdict(g):null;
+ const row=(k,lab,col)=>`<div class="g5row"><span class="lab" style="color:${col}">${lab}</span>
+  <button data-g="${k}" data-d="-1">−</button><span class="val num">${g[k]}</span><button data-g="${k}" data-d="1">+</button></div>`;
+ return `<div class="card gate"><h2><span class="dotp"></span>Morning Gate
+  <span class="g-lights ${v||''}"><span></span><span></span><span></span></span></h2>
+  <div class="g5"><div class="${g.touched?'':'gdim'}">${ringSVG(g)}</div><div class="g5r">
+  ${row('sleep','Sleep h','#5AC8FA')}${row('sore','Soreness /10','#4CC38A')}${row('stiff','Achilles AM /10','#FF7A2F')}</div></div>
+  ${v?`<div class="g-verdict ${v}" style="margin-top:12px"><div class="vt">${VTXT[v][0]}</div><div class="sub" style="color:inherit;opacity:.85">${VTXT[v][1]}</div></div>`
+     :'<div class="sub" style="margin-top:10px">Set the three numbers — the rings fill and the verdict gates today’s session.</div>'}</div>`;}
+
+/* daily-8 + bodyweight in one compact card */
+function quickCard(){const last=st.bw.length?st.bw[st.bw.length-1]:null;
+ return `<div class="card"><h2><span class="dotp" style="background:#F06A9C"></span>Daily-8 + Quick Log</h2>
+  <div class="donebar"><button class="chk ${d8Today()?'on':''}" id="d8chk">✓</button>
+   <span class="sub">Daily-8 ankle/core · 8 min ${d8Today()?'· <b style=&quot;color:var(--green)&quot;>done</b>':'· 3–5×/wk'}</span>
+   <button class="btn small ghost" data-go="sess" data-s="D8" style="margin-left:auto">Open</button></div>
+  <hr class="hr">
+  <div class="metricrow"><input type="number" step="0.1" id="bwIn" placeholder="${last?last.kg:'91.5'}" inputmode="decimal">
+   <span class="sub">kg · band 91–94${last?' · last <b class="num">'+last.kg+'</b>':''}</span>
+   <button class="btn small" id="bwGo" style="margin-left:auto">Log</button></div></div>`;}
+
+/* new Today assembly (banners preserved from v3.2/3.3) */
+vToday=function(){const p4=p4Alert();
+ return ctxBanner()+backupBanner()+(p4?`<div class="alertbar red">${p4}</div>`:'')
+  +heroCard()+weekStrip()+gateCard5()+quickCard();};
+const _bt5=bindToday;bindToday=function(){_bt5();
+ const w=document.getElementById('wk7');if(w)w.onclick=()=>{app.tab='train';app.sess=null;render();};};
+
+/* Train list — icon tiles + accent colours */
+vTrainList=function(){const cards=['A','B','C1','C2','MOB','D8'].map(k=>{const s=SESSIONS[k],m=KMETA[k];
+ const parts=s.title.split(' — ');
+ return `<div class="card" style="--ac:${m.c};--acg:${m.g}"><div class="strow"><div class="sic">${icoSVG(m.i)}</div>
+  <div style="flex:1;min-width:0"><div class="disp" style="font-size:1.12rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em">${esc(parts[0])}</div>
+  <div class="sub">${esc(parts[1]||'')}${parts[1]?' · ':''}${esc(s.time)}</div></div>
+  <button class="btn small acc" data-open="${k}">Open</button></div></div>`;}).join('');
+ return `<div class="card raised"><h2><span class="dotp"></span>Block Calendar</h2>${calHTML()}</div>${cards}`;};
+
+/* calendar — colour-coded left rails */
+calHTML=function(){const ds=todayStr();let out='<div class="cal">';
+ for(const d of Object.keys(CAL)){const a=CAL[d],dd=parseL(d),m=KMETA[a.k]||KMETA.PRE;
+  const done=st.logs.some(l=>l.d===d&&l.done);
+  out+=`<div class="day ${d===ds?'today':''} ${a.k==='GAME'?'game':''}" style="--ac:${m.c}">
+   <div class="dd"><div class="dnum num">${dd.getDate()}</div><div class="dw">${DW[dd.getDay()]}</div></div>
+   <div class="dl"><div class="t">${esc(a.t)}</div><div class="s">${esc(a.s)}</div></div>
+   ${done?'<div class="done">✓</div>':''}</div>`;}
+ return out+`</div><p class="sub" style="margin-top:8px">From <b>Jul 23</b> the calendar switches to the BUILD weekly template (see Playbook → Phases).</p>`;};
+
+/* session view inherits its accent colour */
+const _vS5=vSession;vSession=function(k){const m=KMETA[k]||KMETA.A;
+ return `<div class="sesswrap" style="--ac:${m.c};--acg:${m.g}">${_vS5(k)}</div>`;};
+
+/* fix: bottom nav now follows programmatic navigation (hero CTA, week strip, quick links) */
+function syncTabs(){document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.tab===app.tab));}
+const _r5=render;render=function(){_r5();syncTabs();};
+
+const _dc5=dataCard;dataCard=function(){return _dc5().replace('FINAL r4 · LIQUID GLASS','FINAL r5 · GLASS DASHBOARD');};
+render();
+</script>
+<style>
+/* ============ v5.1 — HIG COMPLIANCE PASS ============ */
+/* Apple HIG: 44×44pt minimum hit targets (fat-finger reliability) */
+.g5row button{width:42px;height:42px}
+.skcell button{width:38px;height:38px}
+.stp button{width:42px;height:44px}
+.stp .v{min-width:48px}
+.g-cell .step button{width:40px;height:40px}
+.chk{width:32px;height:32px;border-radius:10px}
+.btn.small{min-height:40px}
+#tabs button .ic{margin-top:2px}
+/* HIG: no text below ~11pt — raise every micro-caption */
+.wk7 .dw{font-size:.69rem}
+.cal .dd .dw{font-size:.69rem}
+.h-eyebrow{font-size:.69rem}
+.g5row .lab{font-size:.64rem}
+.skcell .n{font-size:.69rem}
+.dk-lab{font-size:.66rem}
+.tbl th{font-size:.66rem}
+#scoreB .tip .t1{font-size:.66rem}
+#timer .tl2{font-size:.66rem}
+.grp .gt{font-size:.68rem}
+.g-cell label{font-size:.64rem}
+.stp .u{font-size:.66rem}
+/* Goal-Gradient: session progress bar */
+.sprog{display:flex;align-items:center;gap:10px;margin:10px 0 2px}
+.spb{flex:1;height:10px;border-radius:999px;background:rgba(16,21,29,.7);
+ border:1px solid rgba(255,255,255,.07);overflow:hidden}
+.spf{height:100%;border-radius:999px;min-width:0;
+ background:linear-gradient(90deg,var(--ac,#FF7A2F),color-mix(in srgb,var(--ac,#FF7A2F) 70%,#fff));
+ box-shadow:0 0 10px -2px var(--acg,transparent);transition:width .45s cubic-bezier(.22,1,.36,1)}
+.sprog.full .spf{background:linear-gradient(90deg,#3FB37F,#63E0A5)}
+.spt{font-size:.72rem;color:var(--ink);font-weight:600;min-width:80px;text-align:right}
+.sprog.full .spt{color:var(--green);font-weight:700}
+</style>
+<script>
+/* ============ v5.1 module — goal-gradient, a11y, status visibility ============ */
+/* session progress: logged sets + checked drills vs plan */
+function sessProgress(k){const s=SESSIONS[k];const log=st.logs.find(l=>l.d===todayStr()&&l.s===k);
+ let done=0,tot=0;
+ if(s.groups)for(const g of s.groups)for(const id of g.items){const m=EX[id].t.match(/^(\d+)/);const n=m?+m[1]:3;
+  tot+=n;done+=Math.min(n,((log&&log.ex[id])||[]).length);}
+ if(s.drills){tot+=s.drills.length;if(log)done+=Object.values(log.dr).filter(Boolean).length;}
+ return{done,tot,pct:tot?Math.round(done/tot*100):0};}
+const _vS6=vSession;
+vSession=function(k){const p=sessProgress(k);
+ const bar=`<div class="sprog ${p.pct>=100?'full':''}" role="progressbar" aria-valuenow="${p.pct}" aria-valuemin="0" aria-valuemax="100">
+  <div class="spb"><div class="spf" style="width:${p.pct}%"></div></div>
+  <span class="spt num">${p.pct>=100?'Complete ✓':p.done+' / '+p.tot+' · '+p.pct+'%'}</span></div>`;
+ return _vS6(k).replace(/(<span class="chip on">[^<]*<\/span><\/div>)/,'$1'+bar);};
+
+/* status visibility: tell the athlete the app still works offline */
+window.addEventListener('offline',()=>toast('Offline — everything still works, logs save on-device'));
+window.addEventListener('online',()=>toast('Back online'));
+
+/* VoiceOver: label every stepper, expose toggle state, mark the active tab */
+const _r6=render;
+render=function(){_r6();
+ document.querySelectorAll('button[data-d]').forEach(b=>{if(!b.hasAttribute('aria-label'))
+  b.setAttribute('aria-label',(+b.dataset.d<0?'Decrease':'Increase'));});
+ document.querySelectorAll('button.chk').forEach(b=>{b.setAttribute('aria-pressed',b.classList.contains('on'));
+  if(!b.hasAttribute('aria-label'))b.setAttribute('aria-label','Mark done');});
+ document.querySelectorAll('#tabs button').forEach(x=>x.classList.contains('on')
+  ?x.setAttribute('aria-current','page'):x.removeAttribute('aria-current'));};
+
+const _dc6=dataCard;dataCard=function(){return _dc6().replace('FINAL r5 · GLASS DASHBOARD','V5 · GLASS · HIG PASS');};
+render();
+</script>
 </body>
 </html>
