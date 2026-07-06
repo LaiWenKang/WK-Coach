@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141820">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WK Coach">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<meta name="description" content="Big-man in-season training system — Wen Kang">
+<title>WK Coach v2 — Big-Man In-Season System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --asphalt:#141820;      /* night-court base */
+  --paint:#1B2330;        /* painted key / panels */
+  --paint-2:#232D3D;      /* raised panel */
+  --line:#39465A;         /* court line, borders */
+  --chalk:#EDEDE6;        /* primary text */
+  --ink:#8A93A6;          /* muted captions */
+  --ball:#FF7A2F;         /* accent — basketball leather */
+  --ball-dim:#B5581F;
+  --green:#4CC38A; --amber:#E9B44C; --red:#E5484D;
+  --r:14px;
+  --nav-h:64px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  background:var(--asphalt);color:var(--chalk);
+  font-family:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:.95rem;line-height:1.45;
+  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);
+  min-height:100vh;
+}
+.disp{font-family:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;letter-spacing:.02em}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input{font:inherit;color:inherit}
+h1,h2,h3{font-weight:700}
+a{color:var(--ball)}
+
+/* ---------- scoreboard header (signature) ---------- */
+#scoreB{
+  position:sticky;top:0;z-index:40;
+  background:linear-gradient(180deg,#10141B 0%,var(--asphalt) 100%);
+  border-bottom:2px solid var(--line);
+  padding:calc(8px + env(safe-area-inset-top)) 14px 10px;
+}
+#scoreB .row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#scoreB .app{font-family:'Barlow Condensed';font-weight:700;font-size:1.05rem;
+  text-transform:uppercase;letter-spacing:.12em;color:var(--ink)}
+#scoreB .app b{color:var(--ball)}
+#scoreB .date{font-family:'Barlow Condensed';font-weight:600;font-size:.95rem;color:var(--ink);text-transform:uppercase;letter-spacing:.06em}
+#scoreB .row2{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:10px}
+#scoreB .assign{font-family:'Barlow Condensed';font-weight:700;font-size:1.5rem;line-height:1.05;text-transform:uppercase;letter-spacing:.03em}
+#scoreB .assign small{display:block;font-family:'Barlow';font-weight:500;font-size:.72rem;letter-spacing:.04em;color:var(--ink);text-transform:none;margin-top:2px}
+#scoreB .tip{text-align:right;min-width:96px}
+#scoreB .tip .t1{font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink)}
+#scoreB .tip .t2{font-family:'Barlow Condensed';font-weight:700;font-size:1.25rem;color:var(--ball)}
+#scoreB .chalkline{height:3px;margin-top:8px;background:
+  repeating-linear-gradient(90deg,var(--line) 0 14px,transparent 14px 22px);border-radius:2px}
+.gamehdr #scoreB .assign{color:var(--ball)}
+
+/* ---------- layout ---------- */
+main{padding:14px 14px 8px;max-width:640px;margin:0 auto}
+.card{background:var(--paint);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px;margin-bottom:12px}
+.card.raised{background:var(--paint-2)}
+.card h2{font-family:'Barlow Condensed';font-size:1.15rem;text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card h2 .dotp{width:8px;height:8px;border-radius:50%;background:var(--ball);flex:0 0 auto}
+.sub{color:var(--ink);font-size:.82rem}
+.hr{height:1px;background:var(--line);margin:10px 0;border:none}
+.chip{display:inline-block;padding:2px 9px;border:1px solid var(--line);border-radius:999px;
+  font-size:.72rem;color:var(--ink);text-transform:uppercase;letter-spacing:.08em}
+.chip.on{border-color:var(--ball);color:var(--ball)}
+.badge{display:inline-block;font-family:'Barlow Condensed';font-weight:700;font-size:.8rem;
+  padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.06em}
+.b-green{background:rgba(76,195,138,.15);color:var(--green);border:1px solid var(--green)}
+.b-amber{background:rgba(233,180,76,.15);color:var(--amber);border:1px solid var(--amber)}
+.b-red{background:rgba(229,72,77,.15);color:var(--red);border:1px solid var(--red)}
+.b-ball{background:rgba(255,122,47,.12);color:var(--ball);border:1px solid var(--ball)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:44px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);
+  background:var(--paint-2);font-weight:600;font-size:.9rem}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--ball);border-color:var(--ball);color:#16100B}
+.btn.ghost{background:transparent}
+.btn.small{min-height:36px;padding:6px 12px;font-size:.82rem;border-radius:10px}
+.btn.block{width:100%}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- bottom nav ---------- */
+#tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;
+  height:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:#10141B;border-top:1px solid var(--line);
+  display:flex}
+#tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;color:var(--ink);font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+#tabs button .ic{font-family:'Barlow Condensed';font-weight:700;font-size:1.15rem;line-height:1}
+#tabs button.on{color:var(--ball)}
+#tabs button:focus-visible{outline:2px solid var(--ball);outline-offset:-2px;border-radius:8px}
+
+/* ---------- readiness gate ---------- */
+.gate .g-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.g-cell{background:var(--asphalt);border:1px solid var(--line);border-radius:12px;padding:8px 6px;text-align:center}
+.g-cell label{display:block;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink);margin-bottom:4px}
+.g-cell .val{font-family:'Barlow Condensed';font-weight:700;font-size:1.6rem}
+.g-cell .step{display:flex;justify-content:center;gap:10px;margin-top:4px}
+.g-cell .step button{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;
+  font-size:1.1rem;font-weight:700;background:var(--paint-2)}
+.g-verdict{border-radius:12px;padding:10px 12px;margin-top:6px;font-weight:600}
+.g-verdict.green{background:rgba(76,195,138,.12);border:1px solid var(--green)}
+.g-verdict.amber{background:rgba(233,180,76,.12);border:1px solid var(--amber)}
+.g-verdict.red{background:rgba(229,72,77,.12);border:1px solid var(--red)}
+.g-verdict .vt{font-family:'Barlow Condensed';font-size:1.1rem;text-transform:uppercase;letter-spacing:.08em}
+.g-lights{display:flex;gap:6px;margin-left:auto}
+.g-lights span{width:12px;height:12px;border-radius:50%;background:var(--line)}
+.g-lights.green span:nth-child(1){background:var(--green)}
+.g-lights.amber span:nth-child(2){background:var(--amber)}
+.g-lights.red span:nth-child(3){background:var(--red)}
+
+/* ---------- session / exercise ---------- */
+.ss-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.ss-head .t{font-family:'Barlow Condensed';font-weight:700;font-size:1.4rem;text-transform:uppercase;letter-spacing:.04em}
+.grp{border-left:3px solid var(--ball-dim);padding-left:10px;margin:14px 0}
+.grp.plain{border-left-color:var(--line)}
+.grp .gt{font-size:.64rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ball);
+  font-weight:700;margin-bottom:6px}
+.grp.plain .gt{color:var(--ink)}
+.ex{background:var(--asphalt);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.ex .xh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.ex .xn{font-weight:700}
+.ex .xt{font-family:'Barlow Condensed';font-weight:600;color:var(--ball);white-space:nowrap}
+.ex .cue{color:var(--ink);font-size:.8rem;margin-top:2px}
+.ex .sets{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;min-height:4px}
+.setchip{background:var(--paint-2);border:1px solid var(--line);border-radius:8px;
+  padding:3px 8px;font-size:.8rem;font-weight:600}
+.setchip b{color:var(--ball)}
+.logrow{display:flex;align-items:center;gap:8px;margin-top:8px}
+.stp{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paint-2)}
+.stp button{width:38px;height:40px;font-size:1.05rem;font-weight:700;color:var(--ink)}
+.stp .v{min-width:56px;text-align:center;font-weight:700;font-family:'Barlow Condensed';font-size:1.1rem}
+.stp .u{font-size:.62rem;color:var(--ink);margin-right:6px}
+.donebar{display:flex;align-items:center;gap:8px;margin-top:6px}
+.chk{width:26px;height:26px;border:2px solid var(--line);border-radius:8px;flex:0 0 auto;
+  display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:transparent}
+.chk.on{background:var(--green);border-color:var(--green);color:#0E1A14}
+.drill{display:flex;gap:10px;align-items:flex-start;background:var(--asphalt);border:1px solid var(--line);
+  border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.drill .dn{font-weight:700}
+.drill .dv{font-family:'Barlow Condensed';color:var(--ball);font-weight:600}
+.drill .cue{color:var(--ink);font-size:.8rem}
+.warm{background:rgba(255,122,47,.06);border:1px dashed var(--ball-dim);border-radius:12px;
+  padding:10px 12px;margin-bottom:12px;font-size:.86rem}
+.warm b{color:var(--ball)}
+.note{font-size:.8rem;color:var(--ink);margin-top:8px}
+.alertbar{border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:.86rem;font-weight:600}
+.alertbar.red{background:rgba(229,72,77,.12);border:1px solid var(--red)}
+.alertbar.amber{background:rgba(233,180,76,.12);border:1px solid var(--amber)}
+
+/* ---------- calendar ---------- */
+.cal{display:flex;flex-direction:column;gap:6px}
+.cal .day{display:flex;gap:10px;align-items:center;background:var(--asphalt);
+  border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.cal .day.today{border-color:var(--ball);box-shadow:0 0 0 1px var(--ball)}
+.cal .day.game{background:rgba(255,122,47,.08)}
+.cal .dd{font-family:'Barlow Condensed';font-weight:700;width:52px;text-align:center;line-height:1.05}
+.cal .dd .dnum{font-size:1.15rem}
+.cal .dd .dw{font-size:.6rem;color:var(--ink);text-transform:uppercase;letter-spacing:.1em}
+.cal .dl{flex:1}
+.cal .dl .t{font-weight:700;font-size:.9rem}
+.cal .dl .s{color:var(--ink);font-size:.76rem}
+.cal .done{color:var(--green);font-weight:800}
+
+/* ---------- protocol timeline ---------- */
+.tl{position:relative;margin-left:6px}
+.tl .ti{display:flex;gap:12px;padding:8px 0;border-left:2px solid var(--line);position:relative;padding-left:16px}
+.tl .ti::before{content:'';position:absolute;left:-6px;top:14px;width:10px;height:10px;border-radius:50%;
+  background:var(--paint-2);border:2px solid var(--line)}
+.tl .ti.done::before{background:var(--green);border-color:var(--green)}
+.tl .tt{min-width:72px;font-family:'Barlow Condensed';font-weight:700;color:var(--ball)}
+.tl .tt small{display:block;color:var(--ink);font-family:'Barlow';font-weight:500;font-size:.68rem}
+.tl .tx{flex:1;font-size:.88rem}
+.tl .ti button.tchk{margin-left:auto}
+
+/* ---------- track ---------- */
+.metricrow{display:flex;gap:10px;align-items:center}
+.metricrow input[type=number]{width:90px;background:var(--asphalt);border:1px solid var(--line);
+  border-radius:10px;padding:9px 10px;font-weight:700;font-family:'Barlow Condensed';font-size:1.05rem;text-align:center}
+input[type=text]{background:var(--asphalt);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%}
+input:focus-visible,button:focus-visible{outline:2px solid var(--ball);outline-offset:1px}
+.spark{width:100%;height:84px;display:block;margin-top:8px}
+.tbl{width:100%;border-collapse:collapse;font-size:.85rem}
+.tbl th{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink);
+  text-align:left;padding:6px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:7px 6px;border-bottom:1px solid rgba(57,70,90,.4)}
+.tbl td.r,.tbl th.r{text-align:right}
+.counter{display:flex;justify-content:space-between;align-items:center;background:var(--asphalt);
+  border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-bottom:8px}
+.counter .cn{font-weight:600;font-size:.88rem}
+.counter .cv{font-family:'Barlow Condensed';font-weight:700;font-size:1.5rem;min-width:36px;text-align:center}
+
+/* ---------- playbook accordions ---------- */
+.acc{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;background:var(--paint)}
+.acc>button{width:100%;display:flex;justify-content:space-between;align-items:center;
+  padding:12px 14px;font-family:'Barlow Condensed';font-weight:700;font-size:1.02rem;
+  text-transform:uppercase;letter-spacing:.06em;text-align:left}
+.acc>button .car{color:var(--ball);transition:transform .18s}
+.acc.open>button .car{transform:rotate(90deg)}
+.acc .body{display:none;padding:0 14px 14px;font-size:.88rem}
+.acc.open .body{display:block}
+.body table{margin:8px 0}
+.body ul{padding-left:18px;margin:6px 0}
+.body li{margin:3px 0}
+.mono{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:.78rem;
+  background:var(--asphalt);border:1px solid var(--line);border-radius:10px;
+  padding:10px;white-space:pre;overflow-x:auto;line-height:1.5;margin:8px 0}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid rgba(57,70,90,.35);font-size:.86rem}
+.kv b{text-align:right}
+
+/* ---------- rest timer sheet ---------- */
+#timer{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  z-index:45;background:#10141B;border-top:2px solid var(--ball);
+  padding:10px 16px;display:none;align-items:center;gap:14px}
+#timer.on{display:flex}
+#timer .tv{font-family:'Barlow Condensed';font-weight:700;font-size:2.2rem;min-width:96px;color:var(--ball)}
+#timer .tl2{font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink)}
+#timer .tbtns{margin-left:auto;display:flex;gap:6px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+#timer.zero .tv{animation:pulse .8s infinite;color:var(--green)}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 14px);z-index:60;
+  background:var(--paint-2);border:1px solid var(--ball);color:var(--chalk);
+  border-radius:999px;padding:8px 16px;font-size:.82rem;font-weight:600;
+  opacity:0;pointer-events:none;transition:opacity .25s}
+#toast.show{opacity:1}
+
+.fixture{display:flex;gap:10px;align-items:center;background:var(--asphalt);border:1px solid var(--line);
+  border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.fixture.play{border-color:var(--ball-dim)}
+.fixture .fd{font-family:'Barlow Condensed';font-weight:700;width:56px;text-align:center;line-height:1.1}
+.fixture .fi{flex:1}
+.fixture .fi .ft{font-weight:700;font-size:.9rem}
+.fixture .fi .fs{color:var(--ink);font-size:.76rem}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.seg button{flex:1;padding:10px 4px;font-family:'Barlow Condensed';font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;font-size:.9rem;color:var(--ink);background:var(--paint)}
+.seg button.on{background:var(--ball);color:#16100B}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header id="scoreB">
+  <svg class="wm" viewBox="0 0 220 110" aria-hidden="true"><path d="M30 110V55a12 12 0 0 1 12-12h136a12 12 0 0 1 12 12v55"/><circle cx="110" cy="110" r="52"/><circle cx="110" cy="110" r="18"/><path d="M-4 110C20 30 200 30 224 110"/></svg>
+  <div class="row1"><div class="app">WK <b>COACH</b> · FINAL</div><div class="date" id="hDate"></div></div>
+  <div class="row2">
+    <div class="assign" id="hAssign">—<small id="hAssignSub"></small></div>
+    <div class="tip"><div class="t1" id="hTipL">NEXT TIP</div><div class="t2 num" id="hTip">—</div></div>
+  </div>
+  <div class="chalkline"></div>
+</header>
+<main id="view"></main>
+<div id="timer" role="timer">
+  <div><div class="tl2">REST</div><div class="tv num" id="tv">1:30</div></div>
+  <div class="tbtns">
+    <button class="btn small" data-t="60">60</button>
+    <button class="btn small" data-t="90">90</button>
+    <button class="btn small" data-t="120">120</button>
+    <button class="btn small ghost" id="tX">✕</button>
+  </div>
+</div>
+<nav id="tabs" aria-label="Sections">
+  <button data-tab="today" class="on"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-3.5 2.5-3.5 15.5 0 18M12 3c3.5 2.5 3.5 15.5 0 18"/></svg></span>Today</button>
+  <button data-tab="train"><span class="ic"><svg viewBox="0 0 24 24"><path d="M2.5 12h2m15 0h2M7 8.5v7M17 8.5v7M9.5 6v12M14.5 6v12M9.5 12h5"/></svg></span>Train</button>
+  <button data-tab="game"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M9.5 2.5h5M12 2.5v3.5M18.5 7l1.5-1.5"/></svg></span>Game</button>
+  <button data-tab="track"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3.5 20.5h17M5 16.5l4.5-5.5 3 3 6-7.5"/><circle cx="18.5" cy="6.5" r="1.2"/></svg></span>Track</button>
+  <button data-tab="book"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5.5 4.5h13v15h-11a2 2 0 0 1-2-2zM5.5 4.5v13M9 8.5h6M9 12h6"/></svg></span>Playbook</button>
+</nav>
+<div id="toast"></div>
+<script>
+/* ================= DATA LAYER ================= */
+const START='2026-07-05';               // app epoch (Game 1)
+const PHASE3='2026-07-23';              // Build phase begins
+const TRANS_END='2026-07-22';
+
+/* --- Exercise library: n=name, t=target, kg=start per-hand (null=BW), cue --- */
+const EX={
+ /* Strength A */
+ plyoSJ:{n:'Squat Jump',t:'3×3',kg:null,cue:'Full intent, stick landing 1s, absorb through hips. Court-1 weeks only.'},
+ plyoPG:{n:'Pogo Hops',t:'2×5',kg:null,cue:'Stiff ankle, quick ground contact, quiet feet.'},
+ gsq:{n:'Goblet / Front-Rack Squat',t:'4×8–10 @3-1-1',kg:24,cue:'Chest up, 3s down, 1s pause. Goblet caps → 2 DB front-rack.'},
+ calfS:{n:'Straight-Knee Calf Raise',t:'3×15',kg:22,cue:'Full ROM, 1s pause at top. Gastroc.'},
+ bss:{n:'Bulgarian Split Squat',t:'3×8 /leg',kg:12,cue:'Rear foot on chair (check it can\u2019t slide). #1 leg builder.'},
+ tib:{n:'Tibialis Raise',t:'3×15–20',kg:null,cue:'Wall-supported. Shin armour for concrete landings.'},
+ rdl:{n:'DB Romanian Deadlift',t:'3×10',kg:22,cue:'Hinge, flat back, hams/glutes load — not lower back.'},
+ sidepl:{n:'Side Plank',t:'3×30–45s /side',kg:null,cue:'Anti-lateral-flexion = your sealing core.'},
+ flg:{n:'Forward / Reverse Lunge',t:'2×8 /leg',kg:14,cue:'Long step, control down, drive back tall. Knee-sensitive → reverse.'},
+ /* Strength B */
+ rlg:{n:'DB Reverse Lunge',t:'2×8–10 /leg',kg:14,cue:'Stay tall, knee-friendly pattern.'},
+ fpress:{n:'DB Floor Press',t:'3×8–10',kg:20,cue:'Push power → finishing through contact.'},
+ slrdl:{n:'Single-Leg RDL',t:'2×8 /leg',kg:12,cue:'Slow, balanced. Hip stability + hamstring.'},
+ row:{n:'DB 1-Arm Row',t:'3×10 /arm',kg:25,cue:'Brace on chair, no torso swing. Rebound pull.'},
+ latlg:{n:'DB Lateral Lunge',t:'2×8 /side',kg:10,cue:'Builds the defensive slide. Sit into the hip.'},
+ ohp:{n:'DB Shoulder Press',t:'3×8–10',kg:16,cue:'Finish high, contest verticality.'},
+ bridge:{n:'B-Stance Glute Bridge',t:'2×10 /leg',kg:27,cue:'DB on hips (pad it). Hard glute squeeze at top.'},
+ rdfly:{n:'Rear-Delt Fly',t:'2×12–15',kg:8,cue:'Chest on knees or hinged. Pull balance vs press. NEW v2.'},
+ soleus:{n:'Seated Bent-Knee Calf Raise',t:'3×10–12 heavy',kg:26,cue:'DBs on knees, 3s down. SOLEUS = Achilles insurance. NEW v2.'},
+ carry:{n:'Farmer Carry',t:'3×30–40 m',kg:28,cue:'Set 3 = single-DB SUITCASE (anti-rotation). Grip stops you.'},
+ core2:{n:'Dead Bug ⇄ Shoulder-Tap Plank',t:'2×8–10 /side',kg:null,cue:'Alternate weekly. Tap = slow, hips dead still (anti-rotation).'}
+};
+
+/* --- Sessions --- */
+const SESSIONS={
+ A:{id:'A',title:'Strength A — Lower Power',time:'~50 min · condo',
+   warm:'Bike 5\u2032 · leg swings 10/side · deep-squat hold 30s · 10 BW squats',
+   groups:[
+    {tag:'P · PLYO (Court-1 weeks only — mandatory)',plyo:true,items:['plyoSJ','plyoPG']},
+    {tag:'A1 / A2 · superset',items:['gsq','calfS']},
+    {tag:'B1 / B2 · superset',items:['bss','tib']},
+    {tag:'C1 / C2 · superset',items:['rdl','sidepl']},
+    {tag:'D',items:['flg']}],
+   notes:['Rest 90s between superset rounds.','Time-crunched cut order: lunge → nothing else. NEVER cut calves/tib.','In-season: every set 2–3 RIR.']},
+ B:{id:'B',title:'Strength B — Posterior + Upper + Trunk',time:'~50 min · condo',
+   warm:'Bike 3\u2032 · hip openers · BW bridge ×10 · arm circles',
+   groups:[
+    {tag:'A1 / A2 · superset',items:['rlg','fpress']},
+    {tag:'B1 / B2 · superset',items:['slrdl','row']},
+    {tag:'C1 / C2 · superset',items:['latlg','ohp']},
+    {tag:'D1 / D2 · superset',items:['bridge','rdfly']},
+    {tag:'E1 / E2 · superset',items:['soleus','carry']},
+    {tag:'F',items:['core2']}],
+   notes:['Lower moves = 2 sets in-season (volume trim P8); presses/rows stay 3.','Cut order: a press → lateral lunge. NEVER cut soleus or carry.']},
+ C1:{id:'C1',title:'Court 1 — Finishing & Footwork',time:'~40 min · office court',
+   warm:'Jog 2\u2032 · dynamic · form layups both hands',
+   drills:[
+    ['Mikan drill','20 makes (2×1\u2032)','Best big-man touch drill. Soft glass.'],
+    ['Reverse Mikan','20 makes','Opposite hand comfort.'],
+    ['Drop-step → power layup','10 each block','Imagine defender on high side.'],
+    ['Jump hook (baby hook)','10 each hand','Defender takes baseline.'],
+    ['Up-and-under','8 each side','Sell the fake — defender jumps early.'],
+    ['Pivot footwork (front/reverse/jump-stop)','5 min','Bottle markers.'],
+    ['Finish-through-contact','10 reps','Wide base, finish HIGH off two.'],
+    ['Fatigued free throws','2×10','Game-condition touch.']],
+   notes:['Evening slot ~6:45 PM preferred. Heat protocol if daylight.']},
+ C2:{id:'C2',title:'Court 2 — Rebound, Interior D, Seal',time:'~40 min · office court',
+   warm:'Jog 2\u2032 · dynamic · easy tip-ins ×10 (NEW v2)',
+   drills:[
+    ['Tip drill off backboard','3×30s','Repeat-jump + soft hands.'],
+    ['Rebound → chin → outlet/finish','20 reps','Elbows out, ball under chin.'],
+    ['Box-out footwork','10 each dir','Pivot, contact, find ball, explode.'],
+    ['Two-foot & one-foot rebound jumps','2×8','Explosive repeats. ~50–60 contacts live here.'],
+    ['Verticality contest','10 reps','Straight up, hands high, zero body.'],
+    ['Defensive slides + close-outs','5 min','Slide, don\u2019t reach.'],
+    ['Sealing sequence','10 each side','Base → arm-bar → hold → target hand.']],
+   notes:['This session IS your jump training — skip Monday plyo on C2 weeks.']},
+ MOB:{id:'MOB',title:'Mobility / Recovery',time:'~25 min · condo',
+   warm:'Easy bike 5\u2032',
+   drills:[
+    ['Hip 90/90 flow','2×5 /side','Slow transitions.'],
+    ['Deep squat pry','3×30s','Elbows push knees out.'],
+    ['Ankle wall rocks','2×12 /side','Knee past toes, heel down.'],
+    ['Couch-stretch hip flexor','2×45s /side','Squeeze glute of rear leg.'],
+    ['T-spine open book','2×8 /side','Exhale into rotation.'],
+    ['Calf + hamstring stretch','2×40s each','After, not before, court days.']],
+   notes:['Finish with the Daily-8 if not yet done today.']},
+ D8:{id:'D8',title:'Daily 8-Min Ankle / Core',time:'8 min · anywhere · 3–5×/wk',
+   warm:'',
+   drills:[
+    ['Split-squat hold','30s /side','Front shin vertical.'],
+    ['Single-leg balance','30s /side','Eyes forward; harder → eyes closed.'],
+    ['Calf-raise hold (top)','20s /side','On step edge if available.'],
+    ['Tibialis raise','20 reps','Wall-supported.'],
+    ['Side plank','25s /side','Straight line, hips high.'],
+    ['Hard plank','30s','Glutes + ribs down.']],
+   notes:['Boring is the point. This is the injury insurance.']}
+};
+
+/* --- Fixtures --- */
+const FIX=[
+ {d:'2026-07-05',dow:'SUN',team:'Maverick Open',role:'PLAY',opp:'KTS Basketball Club A',tip:'20:15',proto:'A'},
+ {d:'2026-07-11',dow:'SAT',team:'Rising Star',role:'SUPPORT',opp:'Ming Cheng Aircon',tip:'14:00',proto:null},
+ {d:'2026-07-12',dow:'SUN',team:'Maverick Open',role:'PLAY',opp:'interiorphotography.sg',tip:'21:30',proto:'C'},
+ {d:'2026-07-18',dow:'SAT',team:'Maverick',role:'PLAY',opp:'Kings 2',tip:'10:15',proto:'B'},
+ {d:'2026-07-18',dow:'SAT',team:'Rising Star',role:'SUPPORT',opp:'PSA',tip:'11:30',proto:null}
+];
+
+/* --- Fixed block calendar (in-season + transition) --- */
+const CAL={
+ '2026-07-05':{k:'GAME',t:'GAME · 8:15 PM',s:'Protocol A · Maverick Open vs KTS · no training, 10\u2032 AM mobility only'},
+ '2026-07-06':{k:'REC',t:'Active Recovery',s:'Easy bike 15–20\u2032 + Mobility + Daily-8'},
+ '2026-07-07':{k:'A',t:'Strength A — HEAVY',s:'Furthest from game. Plyo only if this is a Court-1 week.'},
+ '2026-07-08':{k:'B',t:'Strength B',s:'Moderate · last lower load before Sun'},
+ '2026-07-09':{k:'C1',t:'COURT (locked) — Court 1',s:'Full session · finishing + footwork · 3 days out'},
+ '2026-07-10':{k:'FLOAT',t:'Floating court (if open)',s:'Light sharpness · else Mobility + Daily-8'},
+ '2026-07-11':{k:'MOB',t:'Mobility + Support 2 PM',s:'Rising Star vs Ming Cheng · zero physical cost'},
+ '2026-07-12':{k:'GAME',t:'GAME · 9:30 PM',s:'Protocol C (late night) · vs interiorphotography.sg'},
+ '2026-07-13':{k:'REC',t:'Active Recovery',s:'You\u2019ll be short-slept. Easy bike + mobility. Gate tomorrow decides swap.'},
+ '2026-07-14':{k:'A',t:'Strength A — HEAVY',s:'P5: if Mon sleep wrecked → swap: today B (moderate), Wed A (heavy, 61h pre-tip ✓)'},
+ '2026-07-15':{k:'B',t:'Strength B',s:'Moderate (or A-heavy if swapped)'},
+ '2026-07-16':{k:'C2',t:'COURT LIGHT — skills only',s:'Shooting, footwork, FTs, seal walk-throughs + core. NO max jumps (~36h out)'},
+ '2026-07-17':{k:'MOB',t:'Mobility + Sleep Prime',s:'Pack Jul-18 refuel kit TONIGHT. Game tomorrow AM.'},
+ '2026-07-18':{k:'GAME',t:'GAME · 10:15 AM → support 11:30',s:'Protocol B · vs Kings 2 · refuel IMMEDIATELY post-game'},
+ '2026-07-19':{k:'TRANS',t:'Transition',s:'Walk / swim / nothing. Eat, sleep.'},
+ '2026-07-20':{k:'TRANS',t:'Transition',s:'Easy movement + mobility.'},
+ '2026-07-21':{k:'TRANS',t:'Transition',s:'Optional light court touch (fun only).'},
+ '2026-07-22':{k:'TRANS',t:'Transition ends',s:'Tomorrow: BUILD phase, real progression begins.'}
+};
+/* Build-phase weekly template (from Jul 23): weekday → assignment */
+const BUILD_WK={1:{k:'A',t:'Strength A — progress',s:'Top of range @2RIR → +2 kg/hand next time. Plyo every A day now.'},
+ 2:{k:'FLOAT',t:'Court (floating) / Strength',s:'Best 2nd-court candidate. Taken → condo footwork + core.'},
+ 3:{k:'B',t:'Strength B — progress',s:'Lower moves back to 3 sets. Same +2 kg rule.'},
+ 4:{k:'C1',t:'COURT (locked)',s:'Alternate Court 1 ⇄ Court 2 weekly + jumper project 50 makes.'},
+ 5:{k:'MOB',t:'Mobility / de-load',s:'+ Daily-8.'},
+ 6:{k:'FLOAT',t:'Game / 3rd session',s:'Court 3rd session or conditioning: bike 6×30/30.'},
+ 0:{k:'REC',t:'Recovery + partner day',s:'Full rest earns next week.'}};
+
+/* --- Game-day protocols: m = minutes before tip (negative = after) --- */
+const PROTO={
+ A:{name:'Protocol A — Evening Game',eg:'8:15 PM tip (Jul 5)',items:[
+   [720,'Morning: hydrate early, 10\u2032 mobility, no hard training'],
+   [465,'Lunch — rice + protein + veg, not oily'],
+   [180,'Pre-game meal: carbs + moderate protein, low fat/fibre'],
+   [75,'Snack: banana / bread + PB / isotonic'],
+   [40,'3-phase warm-up (Body → Ball → Sharpness)'],
+   [-105,'Recovery meal + wind-down']]},
+ B:{name:'Protocol B — Morning Game',eg:'10:15 AM tip (Jul 18) · double-header',items:[
+   [195,'Wake 7:00 — hydrate immediately'],
+   [165,'Light breakfast: oats + banana + little protein (low fat/fibre)'],
+   [45,'Top-up: banana or half isotonic'],
+   [30,'3-phase warm-up'],
+   [-5,'DOUBLE-HEADER: refuel NOW — sandwich + milk/shake + banana (kit packed last night). Don\u2019t sit cramping in aircon.'],
+   [-150,'Proper lunch after support duty']]},
+ C:{name:'Protocol C — Late-Night Game',eg:'9:30 PM tip (Jul 12)',items:[
+   [540,'Lunch — normal balanced meal'],
+   [195,'Pre-game “dinner”: carbs + moderate protein, low fat'],
+   [60,'Snack: banana / bread + PB'],
+   [40,'3-phase warm-up'],
+   [-75,'Light snack (yogurt/milk + fruit), dim lights, wind down. NO caffeine after 5 PM.']]}
+};
+const WARMUP3=[['PHASE 1 · BODY','Jog 2\u2032 · BW squat ×10 · lunge ×6/side · calf raise ×12 · leg swings/hip opener'],
+ ['PHASE 2 · BALL','Mikan ×10 · power layup R5/L5 · short hook ×5/side · FT ×10'],
+ ['PHASE 3 · SHARPNESS','D-slides 3×10s · box-out footwork ×5 · verticality jump ×3 · 2–3 hard rebound reps — end ready, not tired']];
+const GAMEGOALS=[['box','Strong box-outs','5+'],['oreb','O-rebound attempts','3+'],['seal','Deep seals','3+'],['to','Soft TOs after rebound/catch','0'],['foul','Reach-in fouls','0']];
+</script>
+<script>
+/* ================= PLAYBOOK CONTENT ================= */
+const PB=[
+{h:'Phases — root to top',b:`
+<div class="mono">PHASE 1  IN-SEASON    now → Jul 18   maintain + fresh · RIR 2–3
+PHASE 2  TRANSITION  Jul 19–22      walk / swim / eat / sleep
+PHASE 3  BUILD       Jul 23 → +6wk  progression · 3rd lower
+                                     stimulus · jumper project
+PHASE 4  PRE-SEASON  ~2wk pre-fix   strength→power · re-taper</div>
+<p class="sub">The app switches its calendar and loading rules automatically at each boundary.</p>`},
+{h:'Daily decision engine',b:`
+<div class="mono">MORNING GATE ─ RED? ──► rest / skills-only
+      │ ok
+      ▼
+COURT OPEN + court owed? ──► COURT   (scarce resource first)
+      │ no
+      ▼
+STRENGTH owed this week? ──► GYM A/B
+      │ no
+      ▼
+HOME: Daily-8 / mobility ──► else REST (earned)</div>
+<div class="kv"><span>Lower-body strength</span><b>2× / wk</b></div>
+<div class="kv"><span>Ball (court or game)</span><b>1–2× / wk</b></div>
+<div class="kv"><span>Ankle + core (Daily-8)</span><b>3× / wk</b></div>
+<div class="kv"><span>Mobility / de-load</span><b>1× / wk</b></div>
+<p class="sub" style="margin-top:8px">Only true fixed anchors: game day + the 48 h pre-game taper. Everything else floats around court availability.</p>`},
+{h:'Why whole-body (your question)',b:`
+<div class="mono">LOWER  ██████████████░░░░░░░░  ~55%
+UPPER  ██████░░░░░░░░░░░░░░░░  ~25%
+TRUNK  █████░░░░░░░░░░░░░░░░░  ~20%</div>
+<ul>
+<li><b>Rebounds</b> = grip + lats + scap → row, carry, rear-delt fly.</li>
+<li><b>Seals</b> = anti-rotation → suitcase carry, shoulder-tap plank, side plank.</li>
+<li><b>Finish through contact</b> = pressing → floor press, OHP.</li>
+<li><b>Force transfer</b>: every newton the legs make crosses the trunk. Soft trunk = leaked leg strength.</li></ul>
+<p class="sub">Lower-biased, never lower-only. Strength B carries the upper/trunk load inside the same weekly budget.</p>`},
+{h:'Loading rules by phase',b:`
+<div class="kv"><span>Week 1 (done)</span><b>CALIBRATE — RIR sets weights</b></div>
+<div class="kv"><span>Now → Jul 18</span><b>HOLD — same weights, 2–3 RIR</b></div>
+<div class="kv"><span>Nudge up allowed</span><b>only 4+ RIR AND Mon–Tue</b></div>
+<div class="kv"><span>Build phase</span><b>top of range @2RIR → +2 kg/hand</b></div>
+<p class="sub" style="margin-top:8px">Strength is cheap to keep: ~⅓ volume maintains it if intensity stays (Bickel 2011; Spiering 2021). In-season, extra sets buy soreness, not strength.</p>`},
+{h:'Progression ladder (before adding kg)',b:`
+<div class="mono">1 reps ↑ in range      5 1.5-reps (brutal)
+2 load ↑ to ceiling    6 density: +set / −rest
+3 eccentric 3–4s       7 go unilateral
+4 pause 2s at sticking 8 plyometrics (court)</div>
+<p class="sub">Why this beats a vest: the game is one leg at a time. Unilateral DB + tempo ≈ near-BW intensity per leg; court plyos build the repeat-jump power no vest can.</p>`},
+{h:'Nutrition — v2 numbers (age 27 verified)',b:`
+<div class="kv"><span>BMR (Mifflin-St Jeor)</span><b>1,985 kcal</b></div>
+<div class="kv"><span>Train/Game day target</span><b>3,100–3,300 kcal</b></div>
+<div class="kv"><span>Rest day</span><b>2,700–2,800 kcal</b></div>
+<div class="kv"><span>Build phase (Jul 23+)</span><b>3,300–3,500 kcal</b></div>
+<div class="kv"><span>Protein</span><b>150–170 g every day</b></div>
+<div class="kv"><span>Carbs train / rest</span><b>340–380 g / ~250 g</b></div>
+<div class="kv"><span>Fat</span><b>75–90 g</b></div>
+<div class="kv"><span>Water</span><b>3–4 L + court losses</b></div>
+<p class="sub" style="margin-top:8px"><b>P9 governor:</b> weight flat/down across 2 weekly weigh-ins while “in surplus” → +200 kcal (carbs). The 91–94 kg band on the Track tab is the truth, not the calculator.</p>
+<p class="sub">No creatine, no performance supplements — per your call. Whey optional purely for protein convenience. Isotonic = heat safety only.</p>
+<p style="margin-top:8px"><b>Sample training day:</b> oats + milk + banana + eggs → rice + fish/beef + veg → pre-court banana + soy milk → noodles/rice + pork/seafood + veg → Greek yogurt if protein short.</p>
+<p class="sub" style="margin-top:6px"><b>Hawker swaps:</b> grilled/steamed &gt; fried · soup &gt; fried noodles · double the protein · skip sugary drinks · add yong tau foo/veg.</p>`},
+{h:'Heat & hydration (outdoor — non-negotiable)',b:`
+<ul>
+<li>500 ml water + electrolytes before; sip throughout.</li>
+<li>Prefer the ~6:45 PM slot; noon = technical work only.</li>
+<li>Shade rests between drills; hat + sunscreen in daylight.</li>
+<li><b>Stop immediately</b> if dizzy or chilled-while-sweating (early heat illness).</li>
+<li>After: rehydrate <b>1.5× body-mass lost</b> (weigh before/after once to learn your sweat rate — SG outdoor is commonly 1–1.5 L/h).</li></ul>`},
+{h:'Pain & tendon rules',b:`
+<div class="kv"><span>0–2 / 10</span><b>Train normally</b></div>
+<div class="kv"><span>3–4 / 10</span><b>Reduce jumping / load</b></div>
+<div class="kv"><span>5+ or sharp</span><b>Stop that movement</b></div>
+<div class="kv"><span>Swelling / instability</span><b>Rest + physio review</b></div>
+<p class="sub" style="margin-top:8px"><b>Tendon trap (P4):</b> tendons warm up and feel fine in play, then punish next morning. Log AM Achilles stiffness daily in the gate; a rise of ≥2 points across 3 mornings cuts jump volume 50% that week — even if pain-free in games.</p>`},
+{h:'Contingencies',b:`
+<ul>
+<li><b>Wet court:</b> automatic condo day. Wet concrete + your ankle history is not a debate. Do the no-hoop parts (pivots, seal footwork, core) + Daily-8.</li>
+<li><b>Court occupied (floating day):</b> shift to another open day, or condo footwork + core; the weekend game covers live reps.</li>
+<li><b>Gym occupied:</b> bodyweight fallback — tempo split squats, SL bridges, pogo prep, Daily-8 ×2.</li>
+<li><b>Jul 18 double-header ops:</b> pack refuel kit (sandwich, milk/shake, banana, 500 ml isotonic) the night before · warm layer for aircon · refuel within 10 min of final whistle · proper lunch after support duty.</li>
+<li><b>Week-3 sleep wreck (P5):</b> Mon 13 gate is RED/AMBER → swap Tue↔Wed (B then A-heavy). Heavy still lands 61 h pre-tip ✓.</li></ul>`},
+{h:'4/5 game checklist',b:`
+<div class="kv"><span>Drop step (baseline)</span><b>defender on high side</b></div>
+<div class="kv"><span>Middle jump hook</span><b>defender blocks baseline</b></div>
+<div class="kv"><span>Up-and-under</span><b>defender jumps early</b></div>
+<div class="kv"><span>Power layup</span><b>O-board / deep catch</b></div>
+<div class="kv"><span>Reverse pivot face-up</span><b>high-post catch</b></div>
+<p style="margin-top:8px"><b>Rebound sequence, every time:</b> hit → seal → locate → jump → two hands → chin → pivot.</p>
+<p class="sub">Defense: chest in front · hands high · stay vertical · slide don’t reach · box out immediately · no swiping down (that’s donating free throws).</p>`},
+{h:'Off-season additions (Jul 23+)',b:`
+<ul>
+<li><b>Jumper project:</b> 10–12 ft face-up — 50 quality makes appended to every Court 1 (form → spot → off reverse pivot).</li>
+<li><b>3rd lower stimulus:</b> Saturday court plyo circuit or a second A-day.</li>
+<li><b>Conditioning base:</b> bike 6×30s/30s week 1, build to 8–10 rounds.</li>
+<li><b>Strength B lower</b> returns to 3 sets; progression rule live everywhere.</li>
+<li>Pull-up bar found → chin-ups 3×AMRAP replace one row slot (best missing rebounder exercise).</li></ul>`},
+{h:'Icon projects — honest translations',b:`
+<div class="mono">ATTAINABILITY @27 (your leagues)
+HAKEEM footwork  ███████████████████░ 95%
+KD shooting      ██████████████░░░░░░ 70%
+DUNK one-hand    █████████░░░░░░░░░░░ 45%
+GIANNIS package  ██░░░░░░░░░░░░░░░░░░ 10%</div>
+<ul>
+<li><b>Hakeem</b> — counter-chain curriculum on Court 1: L1 single moves → L2 chains (drop-step→up-&-under) → L3 live reads vs defender → L4 game quota: 3 planned post counters/game. LeBron learned this from Hakeem at 26–27. Footwork is learned, not born.</li>
+<li><b>KD (translated)</b> — 50 quality makes per Court 1 (10–15 ft face-up) + every fatigued FT counts. Year-1 targets: FT ≥78% · 25-shot spot test ≥12 makes.</li>
+<li><b>Dunk ladder</b> — gate opens Jul 23 with baseline (measure standing reach + chalk best):</li></ul>
+<div class="mono">touch rim → grab rim → tennis ball →
+volleyball → basketball one-hand
+need ≈ 60–65 cm run-up jump @ ~255 reach
+Jan GO/NO-GO: grab-rim reached → GO</div>
+<ul><li><b>Giannis (elements only)</b> — rebound→chin→GO (2–3 dribbles yourself) · short-roll long-step finish · relentless rim runs. Steal the transition habit, skip the identity.</li></ul>
+<p class="sub"><b>Rule:</b> all four are PARKED until Jul 23. The in-season block and taper are untouchable. The dunk project reuses the exact strength/plyo already programmed for rebounding — zero conflict, always capped by the P4 tendon gate.</p>`},
+{h:'References & data note',b:`
+<ul class="sub">
+<li>Bickel et al. 2011 — strength maintenance dosing.</li>
+<li>Spiering et al. 2021 — maintenance-volume review.</li>
+<li>Beyer et al. 2015 — heavy-slow resistance for tendinopathy.</li>
+<li>ISSN / ACSM position stands — nutrient timing; Mifflin-St Jeor RMR.</li>
+<li>NSCA — in-season plyometric guidance.</li></ul>
+<p class="sub" style="margin-top:8px">Your logs save privately to your Claude account (this app’s storage, not shared). Same account = same data next time you open it.</p>`}
+];
+</script>
+<script>
+/* ================= APP LOGIC ================= */
+const KEY='wk-coach-v2';
+let st={v:2,ww:{},logs:[],gate:[],bw:[],jump:[],games:[],pchk:{},done8:[]};
+let app={tab:'today',sess:null,proto:null,draft:{}};
+let saveT=null;
+
+/* ---- utils (LOCAL dates — SGT evenings must not roll to UTC-tomorrow) ---- */
+const P2=n=>String(n).padStart(2,'0');
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+P2(d.getMonth()+1)+'-'+P2(d.getDate());};
+const parseL=(ds,hm)=>{const[a,b,c]=ds.split('-').map(Number);const[h,m]=(hm||'00:00').split(':').map(Number);return new Date(a,b-1,c,h,m);};
+const DW=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const MO=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const fmtShort=ds=>{const d=parseL(ds);return DW[d.getDay()]+' '+d.getDate()+' '+MO[d.getMonth()];};
+const clock=dt=>{let h=dt.getHours(),m=dt.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+P2(m)+' '+ap;};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+/* ---- storage ---- */
+/* Dual-mode persistence: Claude artifact → window.storage · standalone Safari/PWA → localStorage.
+   localStorage path activates ONLY outside Claude (window.storage absent). Stores do not sync. */
+let MODE=(typeof window!=='undefined'&&window.storage&&window.storage.get)?'claude':'local';
+async function sGet(k){if(MODE==='claude'){const r=await window.storage.get(k);return r?r.value:null;}return localStorage.getItem(k);}
+async function sSet(k,v){if(MODE==='claude'){const r=await window.storage.set(k,v);if(!r)throw 0;return;}localStorage.setItem(k,v);}
+async function loadState(){try{const v=await sGet(KEY);if(v){const o=JSON.parse(v);st=Object.assign(st,o);}}catch(e){/* first run — key absent */}}
+function save(msg){clearTimeout(saveT);saveT=setTimeout(async()=>{try{await sSet(KEY,JSON.stringify(st));if(msg)toast(msg);}catch(e){toast('Save failed — data kept in this session');}},700);}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1600);}
+
+/* ---- domain ---- */
+function assignFor(ds){
+  if(CAL[ds])return CAL[ds];
+  if(ds<START)return{k:'PRE',t:'Pre-block',s:'Block starts Jul 5.'};
+  const w=parseL(ds).getDay();const a=Object.assign({},BUILD_WK[w]);a.s='BUILD phase · '+a.s;return a;
+}
+function fixOn(ds){return FIX.find(f=>f.d===ds&&f.role==='PLAY');}
+function nextTip(){const now=new Date();for(const f of FIX){if(f.role!=='PLAY')continue;const t=parseL(f.d,f.tip);if(t.getTime()+110*60000>now.getTime())return{f,t};}return null;}
+function wwFor(id){return st.ww[id]!=null?st.ww[id]:EX[id].kg;}
+function repDef(t){const m=t.match(/×\s*(\d+)/);return m?+m[1]:8;}
+function getLog(ds,sid){let l=st.logs.find(x=>x.d===ds&&x.s===sid);if(!l){l={d:ds,s:sid,ex:{},dr:{},done:false};st.logs.push(l);}return l;}
+function verdict(g){if(g.sleep==null)return null;const trg=(g.sleep<6?1:0)+(g.sore>=4?1:0)+(g.stiff>=4?1:0);
+  if(g.stiff>=6||trg>=2)return'red';if(trg===1)return'amber';return'green';}
+const VTXT={green:['GREEN — run as written','Full session. In-season loads, 2–3 RIR.'],
+ amber:['AMBER — downgrade','Heavy → moderate (RIR 4) · skip plyo · court = skills only.'],
+ red:['RED — protect the block','Rest or skills-only. No heavy, no jumps. One protected day beats a lost week.']};
+function todayGate(){const d=todayStr();let g=st.gate.find(x=>x.d===d);if(!g){g={d,sleep:7,sore:2,stiff:1,touched:false};st.gate.push(g);}return g;}
+function p4Alert(){const gs=st.gate.filter(g=>g.touched).slice(-3);if(gs.length<3)return null;
+  if(gs[2].stiff-gs[0].stiff>=2&&gs[2].stiff>=gs[1].stiff)return'P4 TENDON ALERT: AM stiffness rising 3 mornings — cut jump volume 50% this week (plyo halved, tip-drill 3×30s → 2×20s), even if pain-free in play.';return null;}
+function d8Today(){return st.done8.includes(todayStr());}
+
+/* ---- header ---- */
+function renderHead(){const ds=todayStr(),a=assignFor(ds),d=parseL(ds);
+  document.getElementById('hDate').textContent=DW[d.getDay()]+' · '+d.getDate()+' '+MO[d.getMonth()]+' '+d.getFullYear();
+  document.getElementById('hAssign').innerHTML=esc(a.t)+'<small>'+esc(a.s)+'</small>';
+  document.body.classList.toggle('gamehdr',a.k==='GAME');
+  const nt=nextTip(),L=document.getElementById('hTipL'),V=document.getElementById('hTip');
+  if(!nt){L.textContent='BLOCK';V.textContent=ds>TRANS_END?'BUILD':'DONE';return;}
+  const now=new Date(),ms=nt.t-now;
+  if(ms<=0&&ms>-110*60000){L.textContent='NOW';V.textContent='LIVE';return;}
+  L.textContent='NEXT TIP · '+(nt.f.d===ds?'TODAY':fmtShort(nt.f.d).slice(0,10));
+  if(ms<36e5*20){const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4);V.textContent='T−'+h+'H'+P2(m);}
+  else V.textContent=clock(nt.t);
+}
+
+/* ---- gate card ---- */
+function gateCard(){const g=todayGate(),v=g.touched?verdict(g):null;
+  const cell=(k,lab,max)=>`<div class="g-cell"><label>${lab}</label><div class="val num" id="gv-${k}">${g[k]}</div>
+   <div class="step"><button data-g="${k}" data-d="-1">−</button><button data-g="${k}" data-d="1">+</button></div></div>`;
+  return `<div class="card gate"><h2><span class="dotp"></span>Morning Gate
+   <span class="g-lights ${v||''}"><span></span><span></span><span></span></span></h2>
+   <div class="g-inputs">${cell('sleep','Sleep h',12)}${cell('sore','Soreness /10',10)}${cell('stiff','Achilles AM /10',10)}</div>
+   ${v?`<div class="g-verdict ${v}"><div class="vt">${VTXT[v][0]}</div><div class="sub" style="color:inherit;opacity:.85">${VTXT[v][1]}</div></div>`
+      :'<div class="sub">Set the three numbers — verdict appears and gates today\u2019s session.</div>'}</div>`;
+}
+function bindGate(){document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const g=todayGate(),k=b.dataset.g,d=+b.dataset.d;
+  const lim=k==='sleep'?[0,12]:[0,10];g[k]=Math.min(lim[1],Math.max(lim[0],g[k]+d));g.touched=true;save('Gate saved');render();});}
+
+/* ---- TODAY ---- */
+function vToday(){const ds=todayStr(),a=assignFor(ds),fx=fixOn(ds),p4=p4Alert();
+  const g=todayGate(),v=g.touched?verdict(g):null;
+  let cta='';
+  if(a.k==='GAME'&&fx)cta=`<button class="btn primary block" data-go="proto" data-p="${fx.proto}">Open Protocol ${fx.proto} · tip ${clock(parseL(fx.d,fx.tip))}</button>`;
+  else if(SESSIONS[a.k])cta=`<button class="btn primary block" data-go="sess" data-s="${a.k}">Start ${SESSIONS[a.k].title.split(' — ')[0]}</button>`;
+  else if(a.k==='FLOAT')cta=`<div class="btnrow"><button class="btn" data-go="sess" data-s="C1">Court 1</button><button class="btn" data-go="sess" data-s="C2">Court 2</button><button class="btn ghost" data-go="sess" data-s="MOB">Mobility</button></div>`;
+  else if(a.k==='REC'||a.k==='MOB'||a.k==='TRANS')cta=`<button class="btn block" data-go="sess" data-s="MOB">Open Mobility</button>`;
+  const gameNote=(v&&v!=='green'&&SESSIONS[a.k])?`<div class="alertbar ${v==='red'?'red':'amber'}">${VTXT[v][1]}</div>`:'';
+  return `${p4?`<div class="alertbar red">${p4}</div>`:''}
+  ${gateCard()}
+  <div class="card raised"><h2><span class="dotp"></span>Today\u2019s Assignment</h2>
+    <div class="disp" style="font-size:1.3rem;font-weight:700;text-transform:uppercase">${esc(a.t)}</div>
+    <div class="sub" style="margin:4px 0 10px">${esc(a.s)}</div>${gameNote}${cta}</div>
+  <div class="card"><h2><span class="dotp"></span>Daily-8 Ankle/Core</h2>
+    <div class="donebar"><button class="chk ${d8Today()?'on':''}" id="d8chk">✓</button>
+    <span class="sub">8 min · injury insurance · 3–5×/wk ${d8Today()?'· <b style=&quot;color:var(--green)&quot;>done today</b>':''}</span>
+    <button class="btn small ghost" data-go="sess" data-s="D8" style="margin-left:auto">Open</button></div></div>
+  <div class="card"><h2><span class="dotp"></span>Quick Log — Bodyweight</h2>
+    <div class="metricrow"><input type="number" step="0.1" id="bwIn" placeholder="91.5" inputmode="decimal">
+    <span class="sub">kg · band 91–94</span><button class="btn small" id="bwGo" style="margin-left:auto">Log</button></div></div>`;
+}
+function bindToday(){bindGate();
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go==='sess'){app.tab='train';app.sess=b.dataset.s;}else{app.tab='game';app.proto=b.dataset.p;}render();});
+  const c=document.getElementById('d8chk');if(c)c.onclick=()=>{const d=todayStr();const i=st.done8.indexOf(d);i>=0?st.done8.splice(i,1):st.done8.push(d);save('Daily-8 '+(i>=0?'unchecked':'done'));render();};
+  const bg=document.getElementById('bwGo');if(bg)bg.onclick=()=>{const v=parseFloat(document.getElementById('bwIn').value);if(!v||v<60||v>140)return toast('Enter a real kg value');
+    st.bw=st.bw.filter(x=>x.d!==todayStr());st.bw.push({d:todayStr(),kg:v});st.bw.sort((a,b)=>a.d<b.d?-1:1);save('Weight logged');render();};}
+
+/* ---- TRAIN ---- */
+function vTrainList(){const cards=['A','B','C1','C2','MOB','D8'].map(k=>{const s=SESSIONS[k];
+  return `<div class="card"><div class="ss-head"><div class="t disp">${esc(s.title)}</div></div>
+   <div class="sub">${esc(s.time)}</div><button class="btn small primary" data-open="${k}" style="margin-top:10px">Open</button></div>`;}).join('');
+  return `<div class="card raised"><h2><span class="dotp"></span>Block Calendar</h2>${calHTML()}</div>${cards}`;
+}
+function calHTML(){const ds=todayStr();let out='<div class="cal">';
+  const days=Object.keys(CAL);for(const d of days){const a=CAL[d],dd=parseL(d);
+   const done=st.logs.some(l=>l.d===d&&l.done);
+   out+=`<div class="day ${d===ds?'today':''} ${a.k==='GAME'?'game':''}">
+    <div class="dd"><div class="dnum num">${dd.getDate()}</div><div class="dw">${DW[dd.getDay()]}</div></div>
+    <div class="dl"><div class="t">${esc(a.t)}</div><div class="s">${esc(a.s)}</div></div>
+    ${done?'<div class="done">✓</div>':''}</div>`;}
+  out+=`</div><p class="sub" style="margin-top:8px">From <b>Jul 23</b> the calendar switches to the BUILD weekly template (see Playbook → Phases).</p>`;return out;}
+function vSession(k){const s=SESSIONS[k],ds=todayStr(),log=getLog(ds,k);
+  const g=todayGate(),v=g.touched?verdict(g):null;
+  let h=`<button class="btn small ghost" id="backT">← Sessions</button>
+   <div class="ss-head" style="margin-top:8px"><div class="t disp">${esc(s.title)}</div><span class="chip on">${esc(s.time)}</span></div>
+   ${v&&v!=='green'?`<div class="alertbar ${v==='red'?'red':'amber'}">Gate ${v.toUpperCase()}: ${VTXT[v][1]}</div>`:''}
+   ${s.warm?`<div class="warm"><b>WARM-UP</b> · ${esc(s.warm)}</div>`:''}`;
+  if(s.groups){for(const grp of s.groups){
+    h+=`<div class="grp ${grp.plyo?'':''}"><div class="gt">${esc(grp.tag)}</div>`;
+    for(const id of grp.items){const e=EX[id],sets=log.ex[id]||[],kg=wwFor(id);
+      const chips=sets.map((x,i)=>`<span class="setchip">S${i+1} <b>${x[0]!=null?x[0]+'kg':'BW'}</b>×${x[1]}</span>`).join('');
+      const dv=app.draft[id]||(app.draft[id]={kg:kg,r:repDef(e.t)});
+      h+=`<div class="ex"><div class="xh"><span class="xn">${esc(e.n)}</span><span class="xt">${esc(e.t)}</span></div>
+       <div class="cue">${e.cue}</div><div class="sets">${chips}</div>
+       <div class="logrow">${e.kg!=null?`<div class="stp"><button data-st="${id}" data-f="kg" data-d="-1">−</button><span class="v num">${dv.kg}</span><span class="u">kg</span><button data-st="${id}" data-f="kg" data-d="1">+</button></div>`:'<span class="chip">BW</span>'}
+       <div class="stp"><button data-st="${id}" data-f="r" data-d="-1">−</button><span class="v num">${dv.r}</span><span class="u">${/s\b|s /.test(e.t)?'s':'reps'}</span><button data-st="${id}" data-f="r" data-d="1">+</button></div>
+       <button class="btn small primary" data-log="${id}" style="margin-left:auto">Log set</button></div></div>`;}
+    h+='</div>';}}
+  if(s.drills){h+='<div class="grp plain"><div class="gt">DRILLS — tap to check</div>';
+    s.drills.forEach((d,i)=>{const on=!!log.dr[i];
+     h+=`<div class="drill"><button class="chk ${on?'on':''}" data-dr="${i}">✓</button>
+      <div><div class="dn">${esc(d[0])} <span class="dv">· ${esc(d[1])}</span></div><div class="cue">${esc(d[2])}</div></div></div>`;});
+    h+='</div>';}
+  h+=(s.notes||[]).map(n=>`<div class="note">• ${n}</div>`).join('');
+  h+=`<button class="btn block ${log.done?'':'primary'}" id="sessDone" style="margin-top:14px">${log.done?'✓ Session complete — tap to reopen':'Mark session complete'}</button>`;
+  return h;}
+function bindTrain(){document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{app.sess=b.dataset.open;render();});
+  const bk=document.getElementById('backT');if(bk)bk.onclick=()=>{app.sess=null;app.draft={};render();};
+  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const d=app.draft[b.dataset.st];const f=b.dataset.f,dd=+b.dataset.d;
+    d[f]=Math.max(f==='kg'?0:1,d[f]+(f==='kg'?dd*1:dd));render();});
+  document.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>{const id=b.dataset.log,l=getLog(todayStr(),app.sess),d=app.draft[id];
+    (l.ex[id]=l.ex[id]||[]).push([EX[id].kg!=null?d.kg:null,d.r]);
+    if(EX[id].kg!=null)st.ww[id]=d.kg;save('Set logged');startTimer(90);render();});
+  document.querySelectorAll('[data-dr]').forEach(b=>b.onclick=()=>{const l=getLog(todayStr(),app.sess);l.dr[b.dataset.dr]=!l.dr[b.dataset.dr];save();render();});
+  const sd=document.getElementById('sessDone');if(sd)sd.onclick=()=>{const l=getLog(todayStr(),app.sess);l.done=!l.done;save(l.done?'Logged. Recover well.':'Reopened');render();};}
+
+/* ---- GAME ---- */
+function vGame(){const ds=todayStr();const pk=app.proto||((fixOn(ds)||{}).proto)||'A';app.proto=pk;
+  const fxh=FIX.map(f=>{const dd=parseL(f.d);const play=f.role==='PLAY';
+   return `<div class="fixture ${play?'play':''}"><div class="fd"><div class="num" style="font-size:1.1rem">${dd.getDate()}</div><div class="sub" style="font-size:.6rem">${MO[dd.getMonth()]}</div></div>
+   <div class="fi"><div class="ft">${play?'🟢 PLAY':'👀 SUPPORT'} · ${esc(f.team)}</div><div class="fs">vs ${esc(f.opp)} · ${clock(parseL(f.d,f.tip))}${f.proto?' · Protocol '+f.proto:''}</div></div></div>`;}).join('');
+  const p=PROTO[pk];
+  const fx=FIX.find(f=>f.proto===pk);
+  const tip=fx?parseL(fx.d,fx.tip):null;
+  const ck=st.pchk[pk]||(st.pchk[pk]=[]);
+  const tl=p.items.map((it,i)=>{const done=ck.includes(i);
+    const when=tip?clock(new Date(tip.getTime()-it[0]*60000)):null;
+    const tm=it[0]>=0?('T−'+(it[0]>=60?Math.floor(it[0]/60)+'h'+(it[0]%60?P2(it[0]%60):''):it[0]+'m')):('T+'+Math.abs(it[0])+'m');
+    return `<div class="ti ${done?'done':''}"><div class="tt num">${when||tm}<small>${when?tm:''}</small></div>
+     <div class="tx">${it[1]}</div><button class="chk tchk ${done?'on':''}" data-pi="${i}">✓</button></div>`;}).join('');
+  const goals=GAMEGOALS.map(g=>`<div class="kv"><span>${g[1]}</span><b>${g[2]}</b></div>`).join('');
+  const gm=lastPlayGame();
+  const counters=GAMEGOALS.map(g=>`<div class="counter"><span class="cn">${g[1]}</span>
+    <div class="stp"><button data-gc="${g[0]}" data-d="-1">−</button><span class="v num">${gm[g[0]]||0}</span><button data-gc="${g[0]}" data-d="1">+</button></div></div>`).join('');
+  return `<div class="card raised"><h2><span class="dotp"></span>Fixtures</h2>${fxh}</div>
+  <div class="card"><h2><span class="dotp"></span>Game-Day Protocol</h2>
+   <div class="seg">${['A','B','C'].map(k=>`<button class="${k===pk?'on':''}" data-pp="${k}">${k}</button>`).join('')}</div>
+   <div class="disp" style="font-weight:700;font-size:1.05rem;text-transform:uppercase">${p.name}</div>
+   <div class="sub" style="margin-bottom:8px">${p.eg}</div><div class="tl">${tl}</div></div>
+  <div class="card"><h2><span class="dotp"></span>3-Phase Warm-Up · 25–30\u2032</h2>
+   ${WARMUP3.map(w=>`<div class="kv"><span style="color:var(--ball);font-weight:700">${w[0]}</span></div><p class="sub" style="padding:4px 0 8px">${w[1]}</p>`).join('')}
+   <p class="sub"><b>End ready, not tired.</b></p></div>
+  <div class="card"><h2><span class="dotp"></span>Per-Game Goals</h2>${goals}
+   <hr class="hr"><div class="sub" style="margin-bottom:8px">Post-game log · ${esc(gm.d)}${gm.opp?' vs '+esc(gm.opp):''}</div>${counters}</div>`;}
+function lastPlayGame(){const ds=todayStr();const f=[...FIX].reverse().find(x=>x.role==='PLAY'&&x.d<=ds)||FIX[0];
+  let g=st.games.find(x=>x.d===f.d);if(!g){g={d:f.d,opp:f.opp,box:0,oreb:0,seal:0,to:0,foul:0};st.games.push(g);}g.opp=f.opp;return g;}
+function bindGame(){document.querySelectorAll('[data-pp]').forEach(b=>b.onclick=()=>{app.proto=b.dataset.pp;render();});
+  document.querySelectorAll('[data-pi]').forEach(b=>b.onclick=()=>{const ck=st.pchk[app.proto];const i=+b.dataset.pi;
+    const x=ck.indexOf(i);x>=0?ck.splice(x,1):ck.push(i);save();render();});
+  document.querySelectorAll('[data-gc]').forEach(b=>b.onclick=()=>{const g=lastPlayGame();const k=b.dataset.gc;
+    g[k]=Math.max(0,(g[k]||0)+ +b.dataset.d);save('Game stat saved');render();});}
+
+/* ---- TRACK ---- */
+function sparkBW(){const e=st.bw.slice(-14);if(e.length<2)return'<p class="sub">Log 2+ weights for the trend line.</p>';
+  const vs=e.map(x=>x.kg);let lo=Math.min(...vs,90.5),hi=Math.max(...vs,94.5);const W=320,H=84,pad=6;
+  const X=i=>pad+i*(W-2*pad)/(e.length-1),Y=v=>H-pad-(v-lo)*(H-2*pad)/(hi-lo);
+  const pts=e.map((x,i)=>X(i)+','+Y(x.kg)).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Bodyweight trend">
+   <line x1="0" x2="${W}" y1="${Y(91)}" y2="${Y(91)}" stroke="#39465A" stroke-dasharray="4 4"/>
+   <line x1="0" x2="${W}" y1="${Y(94)}" y2="${Y(94)}" stroke="#39465A" stroke-dasharray="4 4"/>
+   <polyline points="${pts}" fill="none" stroke="#FF7A2F" stroke-width="2.5" stroke-linejoin="round"/>
+   ${e.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x.kg)}" r="3" fill="#FF7A2F"/>`).join('')}</svg>
+   <div class="sub num">last: <b>${vs[vs.length-1]} kg</b> · band 91–94 (dashed)</div>`;}
+function vTrack(){const gs=st.gate.filter(g=>g.touched).slice(-7);
+  const stiffRow=gs.map(g=>`<span class="setchip" title="${g.d}">${g.d.slice(8)}: <b>${g.stiff}</b></span>`).join(' ')||'<span class="sub">Use the morning gate daily — trend appears here.</span>';
+  const wwRows=Object.keys(EX).filter(k=>EX[k].kg!=null).map(k=>`<tr><td>${esc(EX[k].n)}</td><td class="r num"><b>${wwFor(k)}</b> kg${st.ww[k]==null?' <span class="sub">(start)</span>':''}</td></tr>`).join('');
+  const jr=st.jump.slice(-6).reverse().map(j=>`<div class="kv"><span>${fmtShort(j.d)}</span><b>${esc(j.note)}</b></div>`).join('')||'<p class="sub">Weekly: chalk-mark best touch, 3 fresh attempts, same shoes.</p>';
+  const hist=st.logs.filter(l=>l.done).slice(-8).reverse().map(l=>`<div class="kv"><span>${fmtShort(l.d)}</span><b>${SESSIONS[l.s]?SESSIONS[l.s].title.split(' — ')[0]:l.s} ✓</b></div>`).join('')||'<p class="sub">Completed sessions land here.</p>';
+  const p4=p4Alert();
+  return `<div class="card raised"><h2><span class="dotp"></span>Bodyweight</h2>${sparkBW()}
+    <div class="metricrow" style="margin-top:8px"><input type="number" step="0.1" id="bwIn2" placeholder="kg" inputmode="decimal"><button class="btn small" id="bwGo2">Log</button></div></div>
+  <div class="card"><h2><span class="dotp"></span>Achilles AM Stiffness (P4)</h2>
+    ${p4?`<div class="alertbar red">${p4}</div>`:''}<div class="sets">${stiffRow}</div></div>
+  <div class="card"><h2><span class="dotp"></span>Jump — Backboard Chalk Mark</h2>${jr}
+    <div class="metricrow" style="margin-top:8px"><input type="text" id="jIn" placeholder="e.g. mark #3 · +2 cm vs last wk"><button class="btn small" id="jGo">Log</button></div></div>
+  <div class="card"><h2><span class="dotp"></span>Working Weights</h2><table class="tbl"><tbody>${wwRows}</tbody></table>
+    <p class="sub" style="margin-top:6px">Auto-updates from your last logged set. HOLD until Jul 18; +2 kg rule from Jul 23.</p></div>
+  <div class="card"><h2><span class="dotp"></span>Session History</h2>${hist}</div>`;}
+function bindTrack(){const b=document.getElementById('bwGo2');if(b)b.onclick=()=>{const v=parseFloat(document.getElementById('bwIn2').value);
+   if(!v||v<60||v>140)return toast('Enter a real kg value');st.bw=st.bw.filter(x=>x.d!==todayStr());st.bw.push({d:todayStr(),kg:v});st.bw.sort((a,b)=>a.d<b.d?-1:1);save('Weight logged');render();};
+  const j=document.getElementById('jGo');if(j)j.onclick=()=>{const t=document.getElementById('jIn').value.trim();if(!t)return;
+   st.jump.push({d:todayStr(),note:t.slice(0,60)});save('Jump logged');render();};}
+
+/* ---- PLAYBOOK ---- */
+function vBook(){return PB.map((s,i)=>`<div class="acc ${i===0?'open':''}"><button data-acc="${i}"><span>${esc(s.h)}</span><span class="car">▸</span></button><div class="body">${s.b}</div></div>`).join('');}
+function bindBook(){document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>b.parentElement.classList.toggle('open'));}
+
+/* ---- timer ---- */
+let tInt=null,tLeft=0;
+function startTimer(sec){tLeft=sec;const el=document.getElementById('timer');el.classList.add('on');el.classList.remove('zero');tick();
+  clearInterval(tInt);tInt=setInterval(()=>{tLeft--;tick();if(tLeft<=0){clearInterval(tInt);el.classList.add('zero');
+   document.getElementById('tv').textContent='GO';if(navigator.vibrate)navigator.vibrate([180,80,180]);}},1000);}
+function tick(){document.getElementById('tv').textContent=Math.floor(tLeft/60)+':'+P2(tLeft%60);}
+document.querySelectorAll('#timer [data-t]').forEach(b=>b.onclick=()=>startTimer(+b.dataset.t));
+document.getElementById('tX').onclick=()=>{clearInterval(tInt);document.getElementById('timer').classList.remove('on');};
+
+/* ---- render root ---- */
+function render(){renderHead();const V=document.getElementById('view');
+  if(app.tab==='today'){V.innerHTML=vToday();bindToday();}
+  else if(app.tab==='train'){V.innerHTML=app.sess?vSession(app.sess):vTrainList();bindTrain();}
+  else if(app.tab==='game'){V.innerHTML=vGame();bindGame();}
+  else if(app.tab==='track'){V.innerHTML=vTrack();bindTrack();}
+  else{V.innerHTML=vBook();bindBook();}
+  window.scrollTo(0,0);}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  app.tab=b.dataset.tab;if(app.tab!=='train')app.sess=null;app.draft={};render();});
+
+(async()=>{await loadState();render();setInterval(renderHead,30000);})();
+</script>
+<style>
+/* ============ v3 FINAL additions ============ */
+#scoreB{overflow:hidden}
+#scoreB .wm{position:absolute;right:-34px;top:-36px;width:236px;fill:none;stroke:var(--chalk);stroke-width:2;opacity:.06;pointer-events:none}
+#tabs .ic{height:22px}
+#tabs .ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;display:block}
+.pwa #scoreB{padding-top:calc(16px + env(safe-area-inset-top))}
+.dk-wrap{display:flex;gap:14px}
+.dk-g svg{width:92px;height:252px;display:block}
+.dk-side{flex:1;min-width:0}
+.dk-big{font-family:'Barlow Condensed';font-weight:700;font-size:1.9rem;line-height:1.05}
+.dk-lab{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+.dk-row{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.proj svg,.wchart svg,.schart svg{width:100%;height:auto;display:block}
+.radarbox{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.radarbox>svg{width:206px;height:196px;margin:0 auto}
+.skgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-width:178px}
+.skcell{background:var(--asphalt);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.skcell .n{font-size:.66rem;color:var(--ink);text-transform:uppercase;letter-spacing:.06em}
+.skcell .row{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
+.skcell .v{font-family:'Barlow Condensed';font-weight:700;font-size:1.3rem}
+.skcell button{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--paint-2);font-weight:700}
+.heat{display:flex;gap:4px;flex-wrap:wrap}
+.heat span{width:13px;height:13px;border-radius:3px;background:#232D3D}
+.flow svg{width:100%;height:auto}
+.flow text{fill:var(--chalk);font-size:9.5px}
+.flow .lbl{fill:var(--ink);font-size:8px}
+input[type=time]{background:var(--asphalt);border:1px solid var(--line);border-radius:10px;padding:8px 10px;color:var(--chalk);font-family:'Barlow Condensed';font-size:1.05rem}
+</style>
+<script>
+/* ============ v3 FINAL module — physics lab, radar, charts, flow, calc ============ */
+const G=9.81, RIM=305, DUNK=317, GMAX=16, TAU=4.5;
+const hangT=cm=>2*Math.sqrt(2*(cm/100)/G);
+const projGain=m=>GMAX*(1-Math.exp(-m/TAU));
+function monthsTo(target,base){if(base>=target)return 0;for(let m=0;m<=24;m+=0.1){if(base+projGain(m)>=target)return Math.round(m*10)/10;}return null;}
+function ensureV3(){st.dunk=st.dunk||{reach:255,vert:45};
+ st.skN=st.skN||{post:5,fin:5,reb:5,def:5,seal:4,shoot:4};
+ if(st.skP===undefined)st.skP=null;
+ st.tipCustom=st.tipCustom||'20:15';}
+const _render=render; render=function(){ensureV3();_render();};
+if(navigator.standalone)document.body.classList.add('pwa');
+
+/* ---- Dunk Lab ---- */
+const Ycm=cm=>10+(332-cm)/(332-235)*228;   // gauge map 235–332cm → px
+function dunkCard(){const d=st.dunk,touch=d.reach+d.vert,ht=hangT(d.vert);
+ const mGrab=monthsTo(RIM,touch),mDunk=monthsTo(DUNK,touch);
+ const gauge=`<svg viewBox="0 0 100 252" aria-label="Jump gauge">
+  <line x1="18" x2="18" y1="${Ycm(235)}" y2="${Ycm(332)}" stroke="#39465A"/>
+  ${[240,260,280,300,320].map(c=>`<line x1="14" x2="22" y1="${Ycm(c)}" y2="${Ycm(c)}" stroke="#39465A"/><text x="26" y="${Ycm(c)+3}" class="svgtxt" fill="#8A93A6" font-size="8">${c}</text>`).join('')}
+  <line x1="10" x2="96" y1="${Ycm(RIM)}" y2="${Ycm(RIM)}" stroke="#FF7A2F" stroke-width="2"/>
+  <text x="52" y="${Ycm(RIM)-4}" fill="#FF7A2F" font-size="9" font-weight="700">RIM 305</text>
+  <line x1="10" x2="96" y1="${Ycm(DUNK)}" y2="${Ycm(DUNK)}" stroke="#E9B44C" stroke-dasharray="4 3"/>
+  <text x="52" y="${Ycm(DUNK)-3}" fill="#E9B44C" font-size="8">DUNK 317</text>
+  <line x1="40" x2="96" y1="${Ycm(d.reach)}" y2="${Ycm(d.reach)}" stroke="#8A93A6" stroke-dasharray="2 3"/>
+  <text x="42" y="${Ycm(d.reach)+10}" fill="#8A93A6" font-size="8">reach ${d.reach}</text>
+  <line x1="55" x2="83" y1="${Ycm(touch)}" y2="${Ycm(touch)}" stroke="#EDEDE6" stroke-width="2"/>
+  <circle id="dkBall" cx="69" cy="${Ycm(d.reach)}" r="7" fill="#FF7A2F"/>
+ </svg>`;
+ const proj=(()=>{const lo=Math.min(touch,300)-3,hi=Math.max(touch+GMAX,DUNK)+3;
+  const X=m=>12+m/24*280,Y=v=>108-(v-lo)/(hi-lo)*96;
+  let pts='';for(let m=0;m<=24;m+=1){pts+=X(m)+','+Y(touch+projGain(m))+' ';}
+  const mark=(m,col,lab)=>m==null?'':`<circle cx="${X(m)}" cy="${Y(m===0?touch:touch+projGain(m))}" r="3.5" fill="${col}"/><text x="${Math.min(X(m)+4,258)}" y="${Y(touch+projGain(m))-5}" fill="${col}" font-size="8.5" font-weight="700">${lab} ${m===0?'now':m+'mo'}</text>`;
+  return `<svg viewBox="0 0 300 120" aria-label="Projection">
+   <line x1="12" x2="292" y1="${Y(RIM)}" y2="${Y(RIM)}" stroke="#FF7A2F" stroke-width="1.5"/><text x="14" y="${Y(RIM)-3}" fill="#FF7A2F" font-size="8">RIM GRAB</text>
+   <line x1="12" x2="292" y1="${Y(DUNK)}" y2="${Y(DUNK)}" stroke="#E9B44C" stroke-dasharray="4 3"/><text x="14" y="${Y(DUNK)-3}" fill="#E9B44C" font-size="8">DUNK</text>
+   <polyline points="${pts}" fill="none" stroke="#EDEDE6" stroke-width="2"/>
+   ${mark(mGrab,'#4CC38A','GRAB')}${mark(mDunk,'#E9B44C','DUNK')}
+   ${[0,6,12,18,24].map(m=>`<text x="${X(m)-4}" y="118" fill="#8A93A6" font-size="8">${m}m</text>`).join('')}
+  </svg>`})();
+ const stp=(f,lab,val,unit)=>`<div class="stp"><button data-dk="${f}" data-d="-1">−</button><span class="v num">${val}</span><span class="u">${unit}</span><button data-dk="${f}" data-d="1">+</button></div><span class="dk-lab">${lab}</span>`;
+ return `<div class="card raised"><h2><span class="dotp"></span>Dunk Lab — Physics Simulator</h2>
+  <div class="dk-wrap"><div class="dk-g">${gauge}</div>
+   <div class="dk-side">
+    <div class="dk-lab">Max touch (run-up)</div><div class="dk-big num" style="color:var(--ball)">${touch} cm</div>
+    <div class="dk-lab" style="margin-top:6px">Hang time · t=2√(2h/g)</div><div class="dk-big num">${ht.toFixed(2)} s</div>
+    <div class="dk-row">${stp('reach','standing reach',d.reach,'cm')}</div>
+    <div class="dk-row">${stp('vert','running vert',d.vert,'cm')}</div>
+    <button class="btn primary small" id="dkJump">▲ Test Jump</button>
+   </div></div>
+  <div class="kv"><span>Rim grab (305) gap</span><b>${Math.max(0,RIM-touch)} cm ${mGrab!=null?'· proj '+(mGrab===0?'NOW ✓':mGrab+' mo'):'· >24 mo'}</b></div>
+  <div class="kv"><span>One-hand dunk (317) gap</span><b>${Math.max(0,DUNK-touch)} cm ${mDunk!=null?'· proj '+(mDunk===0?'NOW ✓':mDunk+' mo'):'· >24 mo — raise base strength first'}</b></div>
+  <div class="proj" style="margin-top:8px">${proj}</div>
+  <p class="sub">Gain model: ${GMAX}·(1−e^(−m/${TAU})) — the honest +10–18 cm/yr band, tendon-gated by P4. Baseline both numbers on <b>Jul 23</b>.</p></div>`;}
+function dkAnim(){const d=st.dunk,ball=document.getElementById('dkBall');if(!ball)return;
+ const y0=Ycm(d.reach),y1=Ycm(d.reach+d.vert),T=hangT(d.vert)*1000;
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches){ball.setAttribute('cy',y1);return;}
+ const t0=performance.now();(function f(t){const x=Math.min(1,(t-t0)/T);
+  ball.setAttribute('cy',y0-(y0-y1)*4*x*(1-x));if(x<1)requestAnimationFrame(f);else if(navigator.vibrate)navigator.vibrate(60);})(t0);}
+
+/* ---- Skill Radar ---- */
+const SKAX=[['post','Post FW'],['fin','Finish'],['reb','Rebound'],['def','Int-D'],['seal','Seal'],['shoot','Shoot']];
+function rPt(i,v){const a=(-90+i*60)*Math.PI/180;return[103+v/10*78*Math.cos(a),98+v/10*78*Math.sin(a)];}
+function poly(vals){return SKAX.map((s,i)=>rPt(i,vals[s[0]]).map(n=>n.toFixed(1)).join(',')).join(' ');}
+function radarCard(){const rings=[2,4,6,8,10].map(r=>`<polygon points="${poly({post:r,fin:r,reb:r,def:r,seal:r,shoot:r})}" fill="none" stroke="#39465A" stroke-width="${r===10?1.2:0.6}"/>`).join('');
+ const axes=SKAX.map((s,i)=>{const[x,y]=rPt(i,10),[lx,ly]=rPt(i,12.3);
+  return `<line x1="103" y1="98" x2="${x}" y2="${y}" stroke="#39465A" stroke-width=".6"/><text x="${lx}" y="${ly+3}" text-anchor="middle" fill="#8A93A6" font-size="9">${s[1]}</text>`;}).join('');
+ const now=`<polygon points="${poly(st.skN)}" fill="rgba(255,122,47,.22)" stroke="#FF7A2F" stroke-width="2"/>`;
+ const prev=st.skP?`<polygon points="${poly(st.skP.vals)}" fill="none" stroke="#EDEDE6" stroke-width="1.4" stroke-dasharray="4 3"/>`:'';
+ const cells=SKAX.map(s=>`<div class="skcell"><div class="n">${s[1]}</div><div class="row"><button data-sk="${s[0]}" data-d="-1">−</button><span class="v num">${st.skN[s[0]]}</span><button data-sk="${s[0]}" data-d="1">+</button></div></div>`).join('');
+ return `<div class="card"><h2><span class="dotp"></span>Skill Radar — the six targets</h2>
+  <div class="radarbox"><svg viewBox="0 0 206 196">${rings}${axes}${prev}${now}</svg>
+  <div class="skgrid">${cells}</div></div>
+  <div class="btnrow" style="margin-top:10px"><button class="btn small" id="skSnap">Save monthly snapshot</button>
+  ${st.skP?`<span class="chip">ghost: ${st.skP.d}</span>`:'<span class="sub">Snapshot monthly — the dashed ghost shows growth.</span>'}</div></div>`;}
+
+/* ---- Load & health charts ---- */
+function weekKey(ds){const d=parseL(ds);const mon=new Date(d);mon.setDate(d.getDate()-((d.getDay()+6)%7));return mon.getFullYear()+'-'+P2(mon.getMonth()+1)+'-'+P2(mon.getDate());}
+function tonnage(){const m={};for(const l of st.logs){const wk=weekKey(l.d);let t=0;
+  for(const id in l.ex)for(const s of l.ex[id])t+=(s[0]||0)*s[1];m[wk]=(m[wk]||0)+t;}
+ return Object.entries(m).sort().slice(-6);}
+function tonnageCard(){const w=tonnage();if(!w.length)return'';
+ const max=Math.max(...w.map(x=>x[1]),1),BW=280/w.length;
+ const bars=w.map((x,i)=>{const h=x[1]/max*80,X=12+i*BW;
+  return `<rect x="${X+BW*0.15}" y="${96-h}" width="${BW*0.7}" height="${h}" fill="#FF7A2F" rx="3"/>
+   <text x="${X+BW/2}" y="${92-h}" text-anchor="middle" fill="#EDEDE6" font-size="8.5" font-weight="700">${x[1]>=1000?(x[1]/1000).toFixed(1)+'t':x[1]}</text>
+   <text x="${X+BW/2}" y="108" text-anchor="middle" fill="#8A93A6" font-size="8">${fmtShort(x[0]).slice(4)}</text>`;}).join('');
+ return `<div class="card"><h2><span class="dotp"></span>Weekly Tonnage (kg lifted)</h2>
+  <div class="wchart"><svg viewBox="0 0 300 112">${bars}</svg></div>
+  <p class="sub">Auto-summed from logged sets. In-season: flat is correct. Build phase: gentle up-slope.</p></div>`;}
+function stiffCard(){const gs=st.gate.filter(g=>g.touched).slice(-14);if(gs.length<2)return'';
+ const X=i=>14+i*(276/Math.max(1,gs.length-1)),Y=v=>100-v*9;
+ const pts=gs.map((g,i)=>X(i)+','+Y(g.stiff)).join(' ');
+ return `<div class="card"><h2><span class="dotp"></span>Achilles Stiffness — 14-day line</h2>
+  <div class="schart"><svg viewBox="0 0 300 112">
+  <line x1="14" x2="290" y1="${Y(4)}" y2="${Y(4)}" stroke="#E5484D" stroke-dasharray="4 3"/>
+  <text x="16" y="${Y(4)-4}" fill="#E5484D" font-size="8">P4 threshold</text>
+  <polyline points="${pts}" fill="none" stroke="#EDEDE6" stroke-width="2"/>
+  ${gs.map((g,i)=>`<circle cx="${X(i)}" cy="${Y(g.stiff)}" r="3" fill="${g.stiff>=4?'#E5484D':'#4CC38A'}"/>`).join('')}
+  </svg></div></div>`;}
+function heatCard(){let out='<div class="heat">';const cmap={green:'#4CC38A',amber:'#E9B44C',red:'#E5484D'};
+ for(let i=20;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);
+  const ds=d.getFullYear()+'-'+P2(d.getMonth()+1)+'-'+P2(d.getDate());
+  const g=st.gate.find(x=>x.d===ds&&x.touched);
+  out+=`<span title="${ds}" style="${g?'background:'+cmap[verdict(g)]:''}"></span>`;}
+ return `<div class="card"><h2><span class="dotp"></span>Readiness — last 21 days</h2>${out}</div><p class="sub" style="margin:-6px 0 12px 2px">grey = gate not set that morning</p>`;}
+
+/* ---- wrap Track ---- */
+const _vTrack=vTrack, _bindTrack=bindTrack;
+vTrack=function(){return dunkCard()+radarCard()+tonnageCard()+stiffCard()+heatCard()+_vTrack();};
+bindTrack=function(){_bindTrack();
+ document.querySelectorAll('[data-dk]').forEach(b=>b.onclick=()=>{const f=b.dataset.dk,d=+b.dataset.d;
+  const lim=f==='reach'?[240,275]:[20,90];st.dunk[f]=Math.min(lim[1],Math.max(lim[0],st.dunk[f]+d));save('Saved');render();});
+ const j=document.getElementById('dkJump');if(j)j.onclick=dkAnim;
+ document.querySelectorAll('[data-sk]').forEach(b=>b.onclick=()=>{const k=b.dataset.sk;
+  st.skN[k]=Math.min(10,Math.max(1,st.skN[k]+ +b.dataset.d));save();render();});
+ const s=document.getElementById('skSnap');if(s)s.onclick=()=>{st.skP={vals:Object.assign({},st.skN),d:todayStr()};save('Snapshot saved');render();};};
+
+/* ---- Game: any-day protocol calculator ---- */
+const _vGame=vGame,_bindGame=bindGame;
+vGame=function(){const base=_vGame();const p=PROTO[app.proto];
+ const tip=parseL(todayStr(),st.tipCustom);
+ const rows=p.items.map(it=>`<div class="kv"><span>${it[1].split(':')[0].split('—')[0].slice(0,46)}</span><b class="num">${clock(new Date(tip.getTime()-it[0]*60000))}</b></div>`).join('');
+ return base+`<div class="card"><h2><span class="dotp"></span>Any-Day Protocol Calculator</h2>
+  <div class="dk-row"><input type="time" id="tipT" value="${st.tipCustom}"><span class="sub">custom tip-off → Protocol ${app.proto} clocks (outlives the July fixtures)</span></div>${rows}</div>`;};
+bindGame=function(){_bindGame();const t=document.getElementById('tipT');
+ if(t)t.onchange=()=>{if(/^\d{2}:\d{2}$/.test(t.value)){st.tipCustom=t.value;save('Tip time set');render();}};};
+
+/* ---- Playbook: real flowchart replaces ASCII ---- */
+const FLOW=`<div class="flow"><svg viewBox="0 0 330 268">
+<defs><marker id="arw" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7z" fill="#8A93A6"/></marker></defs>
+<polygon points="165,6 228,32 165,58 102,32" fill="#22160E" stroke="#FF7A2F"/>
+<text x="165" y="30" text-anchor="middle">MORNING</text><text x="165" y="41" text-anchor="middle">GATE</text>
+<rect x="6" y="15" width="72" height="34" rx="8" fill="#232D3D" stroke="#E5484D"/>
+<text x="42" y="29" text-anchor="middle">REST /</text><text x="42" y="40" text-anchor="middle">skills-only</text>
+<line x1="102" y1="32" x2="80" y2="32" class="ed" stroke="#8A93A6" marker-end="url(#arw)"/><text x="90" y="26" class="lbl" text-anchor="middle">RED</text>
+<line x1="165" y1="58" x2="165" y2="76" class="ed" stroke="#8A93A6" marker-end="url(#arw)"/><text x="171" y="71" class="lbl">ok</text>
+<polygon points="165,78 236,104 165,130 94,104" fill="#232D3D" stroke="#39465A"/>
+<text x="165" y="100" text-anchor="middle">COURT open</text><text x="165" y="112" text-anchor="middle">+ owed?</text>
+<rect x="252" y="87" width="70" height="34" rx="8" fill="#232D3D" stroke="#4CC38A"/><text x="287" y="108" text-anchor="middle">COURT</text>
+<line x1="236" y1="104" x2="250" y2="104" class="ed" stroke="#8A93A6" marker-end="url(#arw)"/><text x="243" y="98" class="lbl" text-anchor="middle">Y</text>
+<line x1="165" y1="130" x2="165" y2="148" class="ed" stroke="#8A93A6" marker-end="url(#arw)"/><text x="171" y="143" class="lbl">N</text>
+<polygon points="165,150 236,176 165,202 94,176" fill="#232D3D" stroke="#39465A"/>
+<text x="165" y="172" text-anchor="middle">STRENGTH</text><text x="165" y="184" text-anchor="middle">owed this wk?</text>
+<rect x="252" y="159" width="70" height="34" rx="8" fill="#232D3D" stroke="#4CC38A"/><text x="287" y="180" text-anchor="middle">GYM A / B</text>
+<line x1="236" y1="176" x2="250" y2="176" class="ed" stroke="#8A93A6" marker-end="url(#arw)"/><text x="243" y="170" class="lbl" text-anchor="middle">Y</text>
+<line x1="165" y1="202" x2="165" y2="220" class="ed" stroke="#8A93A6" marker-end="url(#arw)"/><text x="171" y="215" class="lbl">N</text>
+<rect x="88" y="222" width="154" height="34" rx="8" fill="#232D3D" stroke="#39465A"/>
+<text x="165" y="236" text-anchor="middle">HOME · Daily-8 / mobility</text><text x="165" y="248" text-anchor="middle" class="lbl">else REST (earned)</text>
+</svg></div>`;
+{const de=PB.find(p=>p.h.startsWith('Daily decision'));if(de)de.b=FLOW+de.b.replace(/<div class="mono">[\s\S]*?<\/div>/,'');}
+render();
+</script>
+<style>
+/* ==== v3.1 — data safety & FT ==== */
+.ta{width:100%;min-height:104px;background:var(--asphalt);border:1px solid var(--line);border-radius:10px;
+ padding:10px;color:var(--chalk);font-family:ui-monospace,Menlo,monospace;font-size:.7rem;line-height:1.4;resize:vertical}
+.mode{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.mode .dot{width:9px;height:9px;border-radius:50%;background:var(--green)}
+.mode.local .dot{background:var(--amber)}
+.ftpct{font-family:'Barlow Condensed';font-weight:700;font-size:2rem;line-height:1}
+</style>
+<script>
+/* ============ v3.1 module — verified storage, backup, flush, FT ============ */
+const BUILD='FINAL r2 · 6 Jul 2026';
+
+/* ---- runtime storage verification + graceful demotion ---- */
+async function storeBoot(){if(MODE!=='claude')return;
+ try{await window.storage.set(KEY+':p','1');
+  const r=await window.storage.get(KEY+':p');
+  if(!(r&&r.value==='1'))throw 0;
+  try{await window.storage.delete(KEY+':p');}catch(_){}
+ }catch(e){MODE='local';
+  try{await loadState();}catch(_){}
+  toast('Claude storage unreachable — using on-device storage');}}
+
+/* ---- flush on hide: iOS suspends PWAs; don't trust the 700ms debounce ---- */
+async function flushSave(){clearTimeout(saveT);try{await sSet(KEY,JSON.stringify(st));}catch(e){}}
+window.addEventListener('pagehide',flushSave);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSave();});
+
+/* ---- export / import ---- */
+function validateImport(o){return !!(o&&typeof o==='object'&&Array.isArray(o.logs)&&Array.isArray(o.gate)&&Array.isArray(o.bw)&&o.ww&&typeof o.ww==='object');}
+function stCounts(){return st.logs.filter(l=>l.done).length+' sessions · '+st.gate.filter(g=>g.touched).length+' gates · '+st.bw.length+' weigh-ins · '+(st.ft?st.ft.length:0)+' FT logs';}
+let impArm=false;
+function dataCard(){return `<div class="card raised"><h2><span class="dotp"></span>Data & Sync</h2>
+ <div class="kv"><span>Storage mode</span><b><span class="mode ${MODE==='local'?'local':''}"><span class="dot"></span>${MODE==='claude'?'Claude account (synced)':'This device (localStorage)'}</span></b></div>
+ <div class="kv"><span>Holdings</span><b>${stCounts()}</b></div>
+ <div class="kv"><span>Build</span><b>${BUILD}</b></div>
+ <div class="btnrow" style="margin:10px 0 8px"><button class="btn small" id="expB">Export backup</button>
+  <button class="btn small ghost" id="expCp" style="display:none">Copy</button></div>
+ <textarea class="ta" id="expTa" readonly style="display:none" aria-label="Export JSON"></textarea>
+ <hr class="hr"><div class="sub" style="margin-bottom:6px">Import: paste a backup below. Two-tap overwrite guard.</div>
+ <textarea class="ta" id="impTa" placeholder='{"v":2, ...}' aria-label="Import JSON"></textarea>
+ <button class="btn small block ${impArm?'primary':''}" id="impB" style="margin-top:8px">${impArm?'Tap again to OVERWRITE current data':'Import backup'}</button>
+ <p class="sub" style="margin-top:8px">Export before the Jul 23 baselines, and whenever you switch homes (Claude ↔ self-host) — paste-import carries everything across.</p></div>`;}
+function bindData(){const eb=document.getElementById('expB');if(eb)eb.onclick=()=>{const ta=document.getElementById('expTa');
+  ta.value=JSON.stringify(st);ta.style.display='block';document.getElementById('expCp').style.display='inline-flex';
+  ta.focus();ta.select();};
+ const cp=document.getElementById('expCp');if(cp)cp.onclick=async()=>{const ta=document.getElementById('expTa');
+  try{await navigator.clipboard.writeText(ta.value);toast('Copied to clipboard');}
+  catch(e){ta.focus();ta.select();try{document.execCommand('copy');toast('Copied');}catch(_){toast('Select-all and copy manually');}}};
+ const ib=document.getElementById('impB');if(ib)ib.onclick=()=>{const raw=document.getElementById('impTa').value.trim();
+  if(!raw)return toast('Paste a backup first');
+  let o;try{o=JSON.parse(raw);}catch(e){impArm=false;return toast('Not valid JSON');}
+  if(!validateImport(o)){impArm=false;return toast('Not a WK Coach backup');}
+  if(!impArm){impArm=true;render();return;}
+  impArm=false;st=Object.assign({v:2,ww:{},logs:[],gate:[],bw:[],jump:[],games:[],pchk:{},done8:[]},o);
+  ensureV3();save('Imported — '+stCounts());render();};}
+
+/* ---- FT tracker (KD project instrument: target ≥78%) ---- */
+function ftWindowPct(entries,win){let m=0,a=0;for(let i=entries.length-1;i>=0&&a<win;i--){m+=entries[i].m;a+=entries[i].a;}
+ return a?{pct:Math.round(m/a*1000)/10,m,a}:null;}
+let ftD={m:8,a:10};
+function ftCard(){const w=ftWindowPct(st.ft||[],100);
+ const stp=(f,val)=>`<div class="stp"><button data-ft="${f}" data-d="-1">−</button><span class="v num">${val}</span><span class="u">${f==='m'?'made':'att'}</span><button data-ft="${f}" data-d="1">+</button></div>`;
+ return `<div class="card"><h2><span class="dotp"></span>Free Throws — KD project</h2>
+  <div class="dk-row">${stp('m',ftD.m)}${stp('a',ftD.a)}<button class="btn small primary" id="ftGo">Log</button></div>
+  ${w?`<div class="dk-row"><span class="ftpct num" style="color:${w.pct>=78?'var(--green)':'var(--amber)'}">${w.pct}%</span>
+   <span class="sub">last ${w.a} attempts (${w.m} made) · target ≥78% <span class="badge ${w.pct>=78?'b-green':'b-amber'}">${w.pct>=78?'ON TARGET':'BUILD'}</span></span></div>`
+  :'<p class="sub">Log every FT block — fatigued 2×10s in Court 1 count. Rolling % appears over the last 100 attempts.</p>'}</div>`;}
+function bindFT(){document.querySelectorAll('[data-ft]').forEach(b=>b.onclick=()=>{const f=b.dataset.ft,d=+b.dataset.d;
+  ftD[f]=Math.max(0,ftD[f]+d);if(ftD.m>ftD.a)ftD[f==='m'?'m':'a']=f==='m'?ftD.a:ftD.m;render();});
+ const g=document.getElementById('ftGo');if(g)g.onclick=()=>{if(ftD.a<1)return toast('Attempts must be ≥1');
+  st.ft.push({d:todayStr(),m:ftD.m,a:ftD.a});save('FT logged: '+ftD.m+'/'+ftD.a);render();};}
+
+/* ---- wire-in: defaults, Track order, Playbook data card ---- */
+const _e3=ensureV3;ensureV3=function(){_e3();st.ft=st.ft||[];};
+vTrack=function(){return dunkCard()+radarCard()+ftCard()+tonnageCard()+stiffCard()+heatCard()+_vTrack();};
+const _bT2=bindTrack;bindTrack=function(){_bT2();bindFT();};
+const _vB2=vBook,_bB2=bindBook;
+vBook=function(){return dataCard()+_vB2();};
+bindBook=function(){_bB2();bindData();};
+
+(async()=>{await storeBoot();ensureV3();render();})();
+</script>
+<script>
+/* ============ v3.2 — installable PWA + backup hygiene ============ */
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{});}catch(e){}
+
+function daysSince(ds){if(!ds)return 1e4;return Math.floor((parseL(todayStr())-parseL(ds))/864e5);}
+function backupBanner(){
+  if(MODE!=='local')return'';
+  const has=st.logs.length||st.gate.some(g=>g.touched)||st.bw.length;
+  const d=daysSince(st.lastExport);
+  if(!has||d<7)return'';
+  return `<div class="alertbar amber">Backup ${st.lastExport?d+' days old':'never taken'} — on-device data has no cloud copy. Playbook → Data &amp; Sync → Export.</div>`;}
+const _vTd=vToday;vToday=function(){return backupBanner()+_vTd();};
+
+/* redefine Data & Sync card: adds Share-as-file export + backup timestamping */
+function dataCard(){const canSh=('share' in navigator);
+ return `<div class="card raised"><h2><span class="dotp"></span>Data & Sync</h2>
+ <div class="kv"><span>Storage mode</span><b><span class="mode ${MODE==='local'?'local':''}"><span class="dot"></span>${MODE==='claude'?'Claude account (synced)':'This device (localStorage)'}</span></b></div>
+ <div class="kv"><span>Holdings</span><b>${stCounts()}</b></div>
+ <div class="kv"><span>Last backup</span><b>${st.lastExport||'never'}</b></div>
+ <div class="kv"><span>Build</span><b>FINAL r3 · PWA · 6 Jul 2026</b></div>
+ <div class="btnrow" style="margin:10px 0 8px"><button class="btn small" id="expB">Export backup</button>
+  ${canSh?'<button class="btn small" id="expSh">Share as file</button>':''}
+  <button class="btn small ghost" id="expCp" style="display:none">Copy</button></div>
+ <textarea class="ta" id="expTa" readonly style="display:none" aria-label="Export JSON"></textarea>
+ <hr class="hr"><div class="sub" style="margin-bottom:6px">Import: paste a backup below. Two-tap overwrite guard.</div>
+ <textarea class="ta" id="impTa" placeholder='{"v":2, ...}' aria-label="Import JSON"></textarea>
+ <button class="btn small block ${impArm?'primary':''}" id="impB" style="margin-top:8px">${impArm?'Tap again to OVERWRITE current data':'Import backup'}</button>
+ <p class="sub" style="margin-top:8px">Hosted bundle runs offline after first load (service worker). Export before Jul 23 baselines and before changing hosts — the URL is the origin, the origin is the data.</p></div>`;}
+function bindData(){const stamp=()=>{st.lastExport=todayStr();save('Backup timestamped');};
+ const eb=document.getElementById('expB');if(eb)eb.onclick=()=>{const ta=document.getElementById('expTa');
+  ta.value=JSON.stringify(st);ta.style.display='block';const c=document.getElementById('expCp');if(c)c.style.display='inline-flex';
+  ta.focus();ta.select();};
+ const cp=document.getElementById('expCp');if(cp)cp.onclick=async()=>{const ta=document.getElementById('expTa');
+  try{await navigator.clipboard.writeText(ta.value);toast('Copied');}catch(e){ta.focus();ta.select();
+   try{document.execCommand('copy');toast('Copied');}catch(_){toast('Select-all and copy manually');}}
+  stamp();render();};
+ const sh=document.getElementById('expSh');if(sh)sh.onclick=async()=>{try{
+   const f=new File([JSON.stringify(st)],'wk-coach-backup-'+todayStr()+'.json',{type:'application/json'});
+   if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'WK Coach backup'});stamp();render();}
+   else toast('File share unavailable — use Copy');
+  }catch(e){/* user cancelled share sheet */}};
+ const ib=document.getElementById('impB');if(ib)ib.onclick=()=>{const raw=document.getElementById('impTa').value.trim();
+  if(!raw)return toast('Paste a backup first');
+  let o;try{o=JSON.parse(raw);}catch(e){impArm=false;return toast('Not valid JSON');}
+  if(!validateImport(o)){impArm=false;return toast('Not a WK Coach backup');}
+  if(!impArm){impArm=true;render();return;}
+  impArm=false;st=Object.assign({v:2,ww:{},logs:[],gate:[],bw:[],jump:[],games:[],pchk:{},done8:[]},o);
+  ensureV3();save('Imported — '+stCounts());render();};}
+render();
+</script>
+<script>
+/* ============ v3.3 — container awareness (Brave/browser-tab guard) ============ */
+let IS_APP=(typeof navigator!=='undefined'&&navigator.standalone===true)||
+           (typeof window!=='undefined'&&window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+function ctxBanner(){
+  if(IS_APP)return'';
+  if(MODE!=='local')return'';
+  if(typeof window!=='undefined'&&window.storage)return'';        /* inside Claude sandbox */
+  if(location.protocol!=='https:')return'';
+  return `<div class="alertbar amber"><b>Browser tab — not the installed app.</b> iOS gives the Home-Screen app its own separate storage. Install first (Safari/Chrome → Share ▸ Add to Home Screen), launch from the icon, and Import there. Data logged in this tab will not follow. Note: Brave's "Add to Home screen" only pins to Brave's start page — it is not an install.</div>`;}
+const _vTd2=vToday;vToday=function(){return ctxBanner()+_vTd2();};
+const _dc=dataCard;
+dataCard=function(){return _dc()
+ .replace('<div class="kv"><span>Holdings',
+  `<div class="kv"><span>Running as</span><b>${IS_APP?'Installed app ✓':'Browser tab'}</b></div><div class="kv"><span>Holdings`)
+ .replace('FINAL r3 · PWA','FINAL r3.1 · PWA');};
+render();
+</script>
+</body>
+</html>
