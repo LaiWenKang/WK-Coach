@@ -1,5 +1,5 @@
 /* WK Coach service worker — offline shell */
-const C='wk-coach-v2';
+const C='wk-coach-v3';
 const ASSETS=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./icon-180.png'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(C).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
@@ -12,11 +12,12 @@ self.addEventListener('activate',e=>{
 self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET')return;
   const u=new URL(e.request.url);
-  if(u.origin!==location.origin)return;              /* let fonts etc. pass untouched */
+  const isFont=u.hostname==='fonts.googleapis.com'||u.hostname==='fonts.gstatic.com';
+  if(u.origin!==location.origin&&!isFont)return;
   e.respondWith(
-    caches.match(e.request,{ignoreSearch:true}).then(hit=>{
+    caches.match(e.request,{ignoreSearch:u.origin===location.origin}).then(hit=>{
       const net=fetch(e.request).then(r=>{
-        if(r&&r.ok){const cp=r.clone();caches.open(C).then(c=>c.put(e.request,cp));}
+        if(r&&(r.ok||r.type==='opaque')){const cp=r.clone();caches.open(C).then(c=>c.put(e.request,cp));}
         return r;
       }).catch(()=>hit);
       return hit||net;                               /* instant paint, refresh behind */
