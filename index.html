@@ -1503,5 +1503,153 @@ render=function(){_r6();
 const _dc6=dataCard;dataCard=function(){return _dc6().replace('FINAL r5 · GLASS DASHBOARD','V5 · GLASS · HIG PASS');};
 render();
 </script>
+<style>
+/* ============ v6 — Notifications & streak row ============ */
+/* iOS-style toggle */
+.tgl{position:relative;display:inline-block;width:44px;height:26px;cursor:pointer;flex:0 0 auto}
+.tgl input{opacity:0;width:0;height:0;position:absolute}
+.tgl-s{position:absolute;inset:0;background:var(--line);border-radius:999px;
+  transition:background .2s}
+.tgl-s::before{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;
+  background:#fff;border-radius:50%;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;
+  box-shadow:0 2px 6px rgba(0,0,0,.45)}
+input:checked+.tgl-s{background:var(--ball)}
+input:checked+.tgl-s::before{transform:translateX(18px)}
+/* greeting + streak row above today */
+.greet-row{display:flex;align-items:center;gap:8px;padding:0 2px 10px;flex-wrap:wrap}
+.greet-hi{font-family:'Barlow Condensed';font-weight:700;font-size:1.05rem;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--ink);flex:1;min-width:0}
+</style>
+<script>
+/* ============ v6 — Notifications, Reminders & Today Streak ============ */
+
+/* ---- state: add notif config ---- */
+const _eN6=ensureV3;
+ensureV3=function(){
+  _eN6();
+  st.notif=st.notif||{enabled:false,time:'07:30',d8time:'20:00',gameDay:true};
+};
+
+/* ---- streak helpers ---- */
+function prevDay(ds){const d=parseL(ds);d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+P2(d.getMonth()+1)+'-'+P2(d.getDate());}
+function calcStreak(dates){
+  if(!dates||!dates.length)return 0;
+  const s=new Set(dates),td=todayStr();
+  let streak=0,cur=td;
+  while(s.has(cur)){streak++;cur=prevDay(cur);}
+  if(streak===0){cur=prevDay(td);while(s.has(cur)){streak++;cur=prevDay(cur);}}
+  return streak;}
+function sessStreakCount(){return calcStreak([...new Set(st.logs.filter(l=>l.done).map(l=>l.d))]);}
+function d8StreakCount(){return calcStreak(st.done8||[]);}
+
+/* ---- greeting ---- */
+function greeting(){const h=new Date().getHours();
+  if(h<5)return'Late night, big man.';
+  if(h<10)return'Morning, big man.';
+  if(h<13)return'Midday check-in.';
+  if(h<17)return'Afternoon grind.';
+  if(h<21)return'Evening session?';
+  return'Night work, big man.';}
+
+/* ---- Today tab: greeting + streak row ---- */
+const _vTdN=vToday;
+vToday=function(){
+  const ss=sessStreakCount(),d8s=d8StreakCount();
+  const pills=(ss>0?`<span class="vpill green">${ss}-session streak</span>`:'')
+    +(d8s>0?`<span class="vpill amber">D8 ${d8s}d</span>`:'');
+  const gr=`<div class="greet-row"><span class="greet-hi">${greeting()}</span>${pills}</div>`;
+  return gr+_vTdN();};
+
+/* ---- notification helpers ---- */
+function notifPermLabel(p){
+  return p==='granted'?'Enabled ✓'
+    :p==='denied'?'Blocked — change in browser settings'
+    :'Not yet set';}
+
+function notifCard(){
+  if(!('Notification' in window))return'';
+  const perm=Notification.permission,n=st.notif||{};
+  const enabled=!!n.enabled,time=n.time||'07:30',d8time=n.d8time||'20:00',gameDay=n.gameDay!==false;
+  const tgl=(id,val)=>`<label class="tgl"><input type="checkbox" id="${id}"${val?' checked':''}><span class="tgl-s"></span></label>`;
+  return`<div class="card raised"><h2><span class="dotp"></span>Reminders</h2>
+  <div class="kv"><span>Permission</span><b style="color:${perm==='granted'?'var(--green)':perm==='denied'?'var(--red)':'var(--ink)'}">${notifPermLabel(perm)}</b></div>
+  ${perm==='default'?`<button class="btn small primary" id="notifReq" style="margin:10px 0 4px;width:100%">Allow notifications</button>
+  <p class="sub" style="margin-bottom:4px">One tap — then pick your reminder times. Works best when the app is installed on Home Screen.</p>`:''}
+  ${perm==='denied'?`<p class="sub" style="margin-top:6px">Safari: Settings → Notifications → WK Coach → Allow. Chrome: Site settings → Notifications → Allow.</p>`:''}
+  ${perm==='granted'?`
+  <div class="kv" style="margin-top:10px"><span>Daily training reminder</span>${tgl('notifEn',enabled)}</div>
+  ${enabled?`
+  <div class="kv"><span>Reminder time</span><b><input type="time" id="notifTime" value="${time}"></b></div>
+  <div class="kv"><span>Daily-8 evening nudge</span><b><input type="time" id="d8NudgeTime" value="${d8time}"></b></div>
+  <div class="kv"><span>Game-day tip-off alert (3 h out)</span>${tgl('gameDayN',gameDay)}</div>
+  <p class="sub" style="margin-top:8px">Fires in the background when the app is installed. Each page open re-arms the next alarm.</p>
+  <button class="btn small ghost" id="notifTest" style="margin-top:8px">Send a test notification</button>
+  `:`<p class="sub" style="margin-top:8px">Flip the switch to set your reminder times.</p>`}
+  `:''}
+  </div>`;}
+
+function bindNotif(){
+  const req=document.getElementById('notifReq');
+  if(req)req.onclick=async()=>{
+    const p=await Notification.requestPermission();
+    if(p==='granted'){toast('Notifications enabled');scheduleAlarms();}
+    else toast('Permission not granted — check browser settings');
+    render();};
+  const en=document.getElementById('notifEn');
+  if(en)en.onchange=()=>{st.notif.enabled=en.checked;save('Reminders '+(en.checked?'on':'off'));scheduleAlarms();render();};
+  const nt=document.getElementById('notifTime');
+  if(nt)nt.onchange=()=>{if(/^\d{2}:\d{2}$/.test(nt.value)){st.notif.time=nt.value;save('Reminder time saved');scheduleAlarms();}};
+  const d8t=document.getElementById('d8NudgeTime');
+  if(d8t)d8t.onchange=()=>{if(/^\d{2}:\d{2}$/.test(d8t.value)){st.notif.d8time=d8t.value;save('Daily-8 nudge time saved');scheduleAlarms();}};
+  const gd=document.getElementById('gameDayN');
+  if(gd)gd.onchange=()=>{st.notif.gameDay=gd.checked;save('Game-day alert '+(gd.checked?'on':'off'));scheduleAlarms();};
+  const test=document.getElementById('notifTest');
+  if(test)test.onclick=()=>{
+    const n=new Notification('WK Coach — test',{body:'Reminders are working.',icon:'./icon-192.png',tag:'wk-test'});
+    setTimeout(()=>n.close(),4000);toast('Test notification sent');};}
+
+/* ---- alarm scheduler (re-runs on each page open) ---- */
+async function scheduleAlarms(){
+  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  if(!st.notif||!st.notif.enabled)return;
+  const reg=await navigator.serviceWorker?.ready.catch(()=>null);
+  if(!reg)return;
+  const now=new Date();
+  const alarms=[];
+  /* 1 — daily training reminder */
+  const[th,tm]=(st.notif.time||'07:30').split(':').map(Number);
+  const daily=new Date();daily.setHours(th,tm,0,0);
+  if(daily<=now)daily.setDate(daily.getDate()+1);
+  const ds=daily.getFullYear()+'-'+P2(daily.getMonth()+1)+'-'+P2(daily.getDate());
+  const a=assignFor(ds);
+  alarms.push({at:daily.getTime(),title:'WK Coach — '+a.t,body:a.s||'Time to train, big man.',tag:'daily'});
+  /* 2 — daily-8 evening nudge (only if not already done today) */
+  if(!d8Today()){
+    const[eh,em]=(st.notif.d8time||'20:00').split(':').map(Number);
+    const d8=new Date();d8.setHours(eh,em,0,0);
+    if(d8>now)alarms.push({at:d8.getTime(),title:'Daily-8 — 8 min ankle & core',body:'Quick 8 minutes of injury insurance. Do it.',tag:'d8'});}
+  /* 3 — game-day tip-off alert */
+  if(st.notif.gameDay!==false){
+    const nt=nextTip();
+    if(nt){const remind=nt.t.getTime()-3*3600*1000;
+      if(remind>now.getTime())
+        alarms.push({at:remind,title:'GAME TODAY — tip-off in 3 h',body:nt.f.opp+' · '+nt.f.tip+(nt.f.proto?' · Protocol '+nt.f.proto:''),tag:'game'});}}
+  /* post to SW */
+  const ctrl=navigator.serviceWorker.controller;
+  if(ctrl)ctrl.postMessage({type:'WK_ALARM',alarms});
+  else navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage({type:'WK_ALARM',alarms});},{once:true});}
+
+/* ---- wire notifCard into Playbook tab ---- */
+const _vBN=vBook,_bBN=bindBook;
+vBook=function(){return notifCard()+_vBN();};
+bindBook=function(){_bBN();bindNotif();};
+
+/* ---- boot ---- */
+/* Re-arm alarms after state loads from storage (localStorage is async-wrapped) */
+(async()=>{ensureV3();render();setTimeout(()=>{ensureV3();scheduleAlarms();},1200);})();
+</script>
 </body>
 </html>
