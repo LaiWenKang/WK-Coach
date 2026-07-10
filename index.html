@@ -1735,5 +1735,148 @@ if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('messag
 window.addEventListener('load',()=>setTimeout(()=>{ensureV3();touchStreak();remSyncNow();regPeriodic();remTick();},900));
 render();
 </script>
+<style>
+/* ============ v7 — ENGAGEMENT (wrapped · teaser · milestones · phase moments) ============ */
+.tmw{color:var(--ink);font-size:.82rem;margin-top:12px;position:relative}
+.tmw b{color:var(--chalk)}
+.wrapT{cursor:pointer}
+.wrapT .sub b{color:var(--ball)}
+.wrhead{font-family:'Barlow Condensed';font-weight:700;font-size:1.4rem;text-transform:uppercase;letter-spacing:.04em;margin:2px 0 6px}
+.wrline{border-radius:12px;padding:10px 12px;margin-top:10px;font-weight:600;font-size:.88rem;
+ background:rgba(255,122,47,.1);border:1px solid var(--ball-dim);color:var(--chalk)}
+.milrow{display:flex;gap:6px;flex-wrap:wrap}
+.milrow .setchip{border-color:var(--amber);color:var(--chalk)}
+.milrow.dim{opacity:.55;margin-top:8px}
+.milrow.dim .setchip{border-color:var(--line)}
+.phasebar{border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:.86rem;font-weight:600;
+ background:rgba(255,122,47,.12);border:1px solid var(--ball)}
+</style>
+<script>
+/* ============ v7 module — the stickiness stack above reminders:
+   instant payoff (tomorrow teaser) · variable reward (Sunday Wrapped, milestones)
+   · moments where the app visibly works for you (phase transitions). ============ */
+const _e7=ensureV3;ensureV3=function(){_e7();
+ st.miles=st.miles||[];st.milesSeed=st.milesSeed||0;st.bestStk=st.bestStk||0;};
+const _ts7=touchStreak;touchStreak=function(){_ts7();
+ if(st.streak&&st.streak.n>(st.bestStk||0))st.bestStk=st.streak.n;};
+
+/* ---- tomorrow teaser — anticipation is the cheapest pull-back ---- */
+function tmwLine(){const t=addDS(todayStr(),1),a=assignFor(t);
+ if(!a||a.k==='PRE')return'';const fx=fixOn(t);
+ return(fx||a.k==='GAME'?'🏀 ':'')+a.t;}
+
+/* ---- phase-transition moments ---- */
+function phaseBanner(ds){ds=ds||todayStr();
+ if(ds===addDS(PHASE3,-1))return'BUILD starts tomorrow — baseline day: measure standing reach, chalk your best touch, then the +2 kg progression goes live.';
+ if(ds===PHASE3)return'BUILD phase — day one. Progression is live: top of range @2RIR → +2 kg/hand. Log your baselines in Track.';
+ return'';}
+
+/* ---- Sunday Wrapped — weekly deltas are where progress is visible ---- */
+function weekDays7(wk){const out=[];for(let i=0;i<7;i++)out.push(addDS(wk,i));return out;}
+function recapData(ds){ds=ds||todayStr();
+ const wk=weekKey(ds),pw=weekKey(addDS(ds,-7));
+ const inWk=(d,w)=>weekKey(d)===w;
+ const sess=w=>st.logs.filter(l=>l.done&&inWk(l.d,w)).length;
+ const plan=w=>weekDays7(w).filter(d=>{const a=assignFor(d);return !!SESSIONS[a.k];}).length;
+ const ton=w=>{let t=0;for(const l of st.logs){if(!inWk(l.d,w))continue;
+  for(const id in l.ex)for(const s of l.ex[id])t+=(s[0]||0)*s[1];}return Math.round(t);};
+ const gs=w=>st.gate.filter(g=>g.touched&&inWk(g.d,w));
+ const stiffAvg=g=>g.length?Math.round(g.reduce((a,x)=>a+x.stiff,0)/g.length*10)/10:null;
+ const ft=w=>{let m=0,a=0;for(const f of(st.ft||[]))if(inWk(f.d,w)){m+=f.m;a+=f.a;}
+  return a?{pct:Math.round(m/a*1000)/10,m,a}:null;};
+ const maxKg=w=>{const m={};for(const l of st.logs){if(!inWk(l.d,w))continue;
+  for(const id in l.ex)for(const s of l.ex[id])if(s[0])m[id]=Math.max(m[id]||0,s[0]);}return m;};
+ const a=maxKg(wk),b=maxKg(pw);let bump=null;
+ for(const id in a)if(b[id]&&a[id]>b[id]){const d=a[id]-b[id];if(!bump||d>bump.d)bump={id,d,to:a[id]};}
+ return{wk,sess:sess(wk),plan:plan(wk),sessP:sess(pw),ton:ton(wk),tonP:ton(pw),
+  stiff:stiffAvg(gs(wk)),stiffP:stiffAvg(gs(pw)),gates:gs(wk).length,
+  ft:ft(wk),ftP:ft(pw),d8:st.done8.filter(d=>inWk(d,wk)).length,bump,streak:streakLive()};}
+function recapLine(r){
+ if(r.ton&&r.tonP&&r.ton>r.tonP*1.05)return'Volume up '+Math.round((r.ton/r.tonP-1)*100)+'% on last week — building.';
+ if(r.plan>0&&r.sess>=r.plan)return'Every planned session banked. That’s how blocks compound.';
+ if(r.stiff!=null&&r.stiffP!=null&&r.stiff<r.stiffP)return'Achilles trending down while training held — the insurance is working.';
+ if(r.sess>0)return r.sess+' session'+(r.sess>1?'s':'')+' in the bank. The block forgives a quiet week — the streak shouldn’t die with it.';
+ return'Quiet week. Set tomorrow’s gate and restart the streak.';}
+const fmtTon=t=>t>=1000?(t/1000).toFixed(1)+' t':t+' kg';
+function recapCard(){const ds=todayStr(),sun=parseL(ds).getDay()===0,open=sun||app.wrapOpen;
+ const r=recapData(ds);
+ if(!open){const dTo=(7-parseL(ds).getDay())%7;
+  return `<div class="card wrapT" id="wrapT" role="button" tabindex="0" aria-label="Open weekly recap">
+   <h2><span class="dotp" style="background:#E9B44C"></span>Sunday Wrapped</h2>
+   <div class="sub">in <b>${dTo}d</b> · so far: ${r.sess}/${r.plan} sessions · ${fmtTon(r.ton)} lifted${r.streak?' · 🔥 '+r.streak:''} — tap to peek</div></div>`;}
+ const dn=(v,p,inv)=>p==null||v==null?'':v===p?' · flat':(inv?v<p:v>p)?' · ▲ vs '+p:' · ▼ vs '+p;
+ return `<div class="card raised"><h2><span class="dotp" style="background:#E9B44C"></span>Sunday Wrapped</h2>
+  <div class="wrhead">Week of ${fmtShort(r.wk)}</div>
+  <div class="kv"><span>Sessions</span><b>${r.sess} / ${r.plan}${dn(r.sess,r.sessP)}</b></div>
+  <div class="kv"><span>Tonnage</span><b>${r.ton?fmtTon(r.ton):'—'}${r.tonP?dn(r.ton,r.tonP).replace('vs '+r.tonP,'vs '+fmtTon(r.tonP)):''}</b></div>
+  <div class="kv"><span>Achilles AM avg</span><b>${r.stiff!=null?r.stiff+(r.stiffP!=null?(r.stiff<=r.stiffP?' · ▼ good':' · ▲ watch it'):''):'—'}</b></div>
+  <div class="kv"><span>Free throws</span><b>${r.ft?r.ft.pct+'% ('+r.ft.m+'/'+r.ft.a+')':'—'}</b></div>
+  <div class="kv"><span>Daily-8</span><b>${r.d8} / 3+</b></div>
+  <div class="kv"><span>Streak</span><b>🔥 ${r.streak}${st.bestStk>r.streak?' · best '+st.bestStk:''}</b></div>
+  ${r.bump&&EX[r.bump.id]?`<div class="kv"><span>Biggest bump</span><b>${esc(EX[r.bump.id].n)} +${r.bump.d} kg → ${r.bump.to} kg</b></div>`:''}
+  <div class="wrline">${recapLine(r)}</div>
+  ${sun?'':'<div class="btnrow" style="margin-top:10px"><button class="btn small ghost" id="wrapX">Close</button></div>'}</div>`;}
+
+/* ---- milestones — anchored to the goals already in the app, not generic badges ---- */
+const doneCount=()=>st.logs.filter(l=>l.done).length;
+const setCount=()=>{let n=0;for(const l of st.logs)for(const id in l.ex)n+=l.ex[id].length;return n;};
+const ftAtt=()=>(st.ft||[]).reduce((a,f)=>a+f.a,0);
+const MILES=[
+ ['wk7','One solid week','🔥',()=>st.bestStk>=7,()=>Math.min(st.bestStk,7)+'/7 days'],
+ ['gate30','30 morning gates','🚦',()=>st.gate.filter(g=>g.touched).length>=30,()=>Math.min(st.gate.filter(g=>g.touched).length,30)+'/30'],
+ ['d820','Daily-8 ×20 — insurance paid','🛡️',()=>st.done8.length>=20,()=>Math.min(st.done8.length,20)+'/20'],
+ ['s25','25 sessions banked','💪',()=>doneCount()>=25,()=>Math.min(doneCount(),25)+'/25'],
+ ['set100','100 sets logged','🏋️',()=>setCount()>=100,()=>Math.min(setCount(),100)+'/100'],
+ ['ft100','100 FTs under fatigue','🎯',()=>ftAtt()>=100,()=>Math.min(ftAtt(),100)+'/100'],
+ ['ftKD','KD target — 78% over 100 FTs','🎯',()=>{const w=ftWindowPct(st.ft||[],100);return !!(w&&w.a>=100&&w.pct>=78);},()=>{const w=ftWindowPct(st.ft||[],100);return w?w.pct+'% of 78%':'0%';}],
+ ['wk30','The habit is real — 30 days','🔥',()=>st.bestStk>=30,()=>Math.min(st.bestStk,30)+'/30 days'],
+ ['rim','Rim grabbed — 305 cm','📏',()=>!!(st.dunk&&st.dunk.reach+st.dunk.vert>=305),()=>st.dunk?(st.dunk.reach+st.dunk.vert)+'/305 cm':'—'],
+ ['dunk','Dunk range — 317 cm','🏀',()=>!!(st.dunk&&st.dunk.reach+st.dunk.vert>=317),()=>st.dunk?(st.dunk.reach+st.dunk.vert)+'/317 cm':'—']];
+function earnedNow(){return MILES.filter(m=>{try{return m[3]();}catch(e){return false;}}).map(m=>m[0]);}
+function checkMiles(){if(!st.milesSeed)return;
+ const e=earnedNow(),nw=e.filter(k=>!st.miles.includes(k));
+ if(!nw.length)return;st.miles=e;
+ const m=MILES.find(x=>x[0]===nw[0]);
+ toast('Milestone: '+m[1]+' '+m[2]);
+ if(st.rem.on&&HASN&&Notification.permission==='granted')
+  notify('Milestone — '+m[1]+' '+m[2],{body:'Banked. Keep stacking.',tag:'mile:'+m[0],data:{tab:'track'}});}
+function milesCard(){const e=earnedNow();
+ const won=MILES.filter(m=>e.includes(m[0])),nxt=MILES.filter(m=>!e.includes(m[0])).slice(0,3);
+ return `<div class="card"><h2><span class="dotp" style="background:#E9B44C"></span>Milestones</h2>
+  ${won.length?'<div class="milrow">'+won.map(m=>`<span class="setchip">${m[2]} <b>${esc(m[1])}</b></span>`).join('')+'</div>'
+   :'<p class="sub">Nothing earned yet — first targets below unlock as you log.</p>'}
+  ${nxt.length?'<div class="milrow dim">'+nxt.map(m=>`<span class="setchip">${m[2]} ${esc(m[1])} · ${m[4]()}</span>`).join('')+'</div>':''}</div>`;}
+
+/* ---- wire-in ---- */
+const _sv7=save;save=function(msg){_sv7(msg);checkMiles();};
+const _hc7=heroCard;heroCard=function(){let h=_hc7();const t=tmwLine();
+ if(t&&badgeN()===0)h=h.replace('</section>','<div class="tmw">Tomorrow · <b>'+esc(t)+'</b></div></section>');
+ return h;};
+const _vS7=vSession;vSession=function(k){let h=_vS7(k);
+ if(getLog(todayStr(),k).done&&tmwLine())
+  h=h.replace(/(<button class="btn block[^>]*id="sessDone"[\s\S]*?<\/button>)/,
+   m=>m+'<p class="note" style="text-align:center;margin-top:10px">Tomorrow · <b>'+esc(tmwLine())+'</b></p>');
+ return h;};
+const REMMARK='<div class="card"><h2><span class="dotp" style="background:#5AC8FA"></span>Reminders';
+const _vT7=vToday;vToday=function(){const pb=phaseBanner();
+ let h=_vT7().replace(REMMARK,m=>recapCard()+m);
+ return(pb?'<div class="phasebar">'+pb+'</div>':'')+h;};
+const _bT7=bindToday;bindToday=function(){_bT7();
+ const w=document.getElementById('wrapT');if(w){w.onclick=()=>{app.wrapOpen=true;render();};
+  w.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();app.wrapOpen=true;render();}};}
+ const x=document.getElementById('wrapX');if(x)x.onclick=()=>{app.wrapOpen=false;render();};};
+const _vTk7=vTrack;vTrack=function(){return milesCard()+_vTk7();};
+const _ri7=remItems;remItems=function(){const q=_ri7();
+ for(const it of q){if(!it.id.startsWith('am:'))continue;const ds=it.id.slice(3);
+  const pb=phaseBanner(ds);if(pb)it.body=(it.body+' · '+pb).slice(0,150);
+  if(parseL(ds).getDay()===0)it.body+=' · Sunday Wrapped is ready 📊';}
+ return q;};
+const _dc8=dataCard;dataCard=function(){return _dc8().replace('V6 · REMINDERS + STREAK','V7 · ENGAGEMENT');};
+
+/* one-time silent seed so a data-rich install doesn't announce a milestone storm */
+window.addEventListener('load',()=>setTimeout(()=>{
+ if(!st.milesSeed){st.miles=earnedNow();st.milesSeed=1;}},1100));
+render();
+</script>
 </body>
 </html>
