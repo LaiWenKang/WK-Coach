@@ -1090,7 +1090,7 @@ bindBook=function(){_bB2();bindData();};
 </script>
 <script>
 /* ============ v3.2 — installable PWA + backup hygiene ============ */
-if('serviceWorker' in navigator && location.protocol==='https:'){
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){
   navigator.serviceWorker.register('./sw.js').catch(()=>{});}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{});}catch(e){}
 
@@ -1501,6 +1501,238 @@ render=function(){_r6();
   ?x.setAttribute('aria-current','page'):x.removeAttribute('aria-current'));};
 
 const _dc6=dataCard;dataCard=function(){return _dc6().replace('FINAL r5 · GLASS DASHBOARD','V5 · GLASS · HIG PASS');};
+render();
+</script>
+<style>
+/* ============ v6 — REMINDERS + STREAK ============ */
+.togl{position:relative;width:52px;height:31px;border-radius:999px;background:rgba(16,21,29,.72);
+ border:1px solid var(--glass-brd);transition:background .25s,border-color .25s;flex:0 0 auto}
+.togl::after{content:'';position:absolute;top:2px;left:2px;width:25px;height:25px;border-radius:50%;
+ background:#8A93A6;box-shadow:0 2px 6px rgba(0,0,0,.4);
+ transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .2s}
+.togl.on{background:rgba(255,122,47,.32);border-color:var(--ball)}
+.togl.on::after{transform:translateX(21px);background:var(--ball)}
+.remrow{display:flex;align-items:center;gap:10px;padding:8px 0}
+.remrow+.remrow{border-top:1px solid rgba(57,70,90,.35)}
+.remrow .rl{flex:1;min-width:0}
+.remrow .rl b{font-size:.9rem}
+.remrow .rl .sub{font-size:.78rem;margin-top:1px}
+.vpill.streak{background:rgba(255,122,47,.13);color:var(--ball);border:1px solid var(--ball)}
+</style>
+<script>
+/* ============ v6 module — reminders, streak (ported from wk-learning), calendar bridge ============
+   Honest capability ladder, no server required:
+   1. app open (any platform)      → scheduled local notifications
+   2. app closed, Android installed→ periodicsync in sw.js drains the same queue (best effort)
+   3. app closed, iPhone           → .ics export: native Calendar alarms outlive the app
+   plus app-icon badge (Android + iOS 16.4+ installed) while a session is owed. */
+const HASN='Notification' in window;
+const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const TABS6=['today','train','game','track','book'];
+async function swReg(){try{return await navigator.serviceWorker.getRegistration();}catch(e){return null;}}
+
+/* ---- defaults ---- */
+const _e6=ensureV3;ensureV3=function(){_e6();
+ st.rem=st.rem||{on:false,t:'07:30',pre:120,d8:false,d8t:'21:30'};
+ st.streak=st.streak||{n:0,fz:0,last:null};};
+
+/* ---- IndexedDB kv — same store sw.js reads ---- */
+function idb6(){return new Promise((res,rej)=>{const r=indexedDB.open('wk-rem',1);
+ r.onupgradeneeded=()=>r.result.createObjectStore('kv');
+ r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+function kvGet(k){return idb6().then(db=>new Promise((res,rej)=>{
+ const q=db.transaction('kv').objectStore('kv').get(k);
+ q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);}));}
+function kvSet(k,v){return idb6().then(db=>new Promise((res,rej)=>{
+ const t=db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);
+ t.oncomplete=()=>res();t.onerror=()=>rej(t.error);}));}
+
+/* ---- streak with freezes — wk-learning gym engine, WK-Coach's definition of "showed up":
+   gate set, set logged, drill checked, session done, Daily-8, weigh-in, FT or jump log ---- */
+const addDS=(ds,n)=>{const d=parseL(ds);d.setDate(d.getDate()+n);return dsOf(d);};
+function dayActive(ds){return st.gate.some(g=>g.d===ds&&g.touched)||st.done8.includes(ds)
+ ||st.bw.some(x=>x.d===ds)||(st.ft||[]).some(f=>f.d===ds)||st.jump.some(j=>j.d===ds)
+ ||st.logs.some(l=>l.d===ds&&(l.done||Object.keys(l.ex).length||Object.values(l.dr).some(Boolean)));}
+function touchStreak(){const d=todayStr(),s=st.streak;if(!s||s.last===d||!dayActive(d))return;
+ if(s.last===addDS(d,-1))s.n++;
+ else if(s.last===addDS(d,-2)&&s.fz>0){s.fz--;s.n++;}       /* freeze auto-covers one missed day */
+ else s.n=1;
+ if(s.n%7===0)s.fz=Math.min(3,s.fz+1);                      /* bank a freeze every full week, cap 3 */
+ s.last=d;}
+function streakLive(){const d=todayStr(),s=st.streak;if(!s||!s.last)return 0;
+ if(s.last===d||s.last===addDS(d,-1))return s.n;
+ if(s.last===addDS(d,-2)&&s.fz>0)return s.n;return 0;}
+
+/* ---- reminder queue: next 14 days, each item carries its own expiry ---- */
+function remItems(){const out=[],t0=todayStr(),live=streakLive();
+ for(let i=0;i<14;i++){const ds=addDS(t0,i),a=assignFor(ds);
+  if(a.k==='PRE')continue;
+  const am=parseL(ds,st.rem.t).getTime();
+  const tail=live>=2?' · 🔥 '+live+'-day streak — keep it alive':' Set the morning gate.';
+  out.push({id:'am:'+ds,at:am,exp:parseL(ds,'23:00').getTime(),tab:'today',
+   title:(a.k==='GAME'?'🏀 ':'')+a.t,body:((a.s||'').slice(0,110)+tail).trim()});
+  const fx=fixOn(ds);
+  if(fx){const tip=parseL(ds,fx.tip).getTime();
+   out.push({id:'gm:'+ds,at:tip-st.rem.pre*60000,exp:tip,tab:'game',
+    title:'Tip-off '+clock(parseL(ds,fx.tip))+' · Protocol '+(fx.proto||'A'),
+    body:'vs '+fx.opp+' — open the protocol timeline'});}
+  if(st.rem.d8&&!(i===0&&d8Today()))out.push({id:'d8:'+ds,at:parseL(ds,st.rem.d8t).getTime(),
+   exp:parseL(ds,'23:59').getTime(),tab:'today',
+   title:'Daily-8 — 8 minutes',body:'Ankle + core insurance before the day ends.'});}
+ const now=Date.now();return out.filter(x=>x.exp>now);}
+function badgeN(){const ds=todayStr(),a=assignFor(ds);
+ if(a.k==='GAME')return fixOn(ds)?1:0;
+ if(SESSIONS[a.k])return st.logs.some(l=>l.d===ds&&l.s===a.k&&l.done)?0:1;
+ return 0;}
+function updateBadge(){if(!('setAppBadge' in navigator))return;
+ try{const n=st.rem.on?badgeN():0;const p=n?navigator.setAppBadge(n):navigator.clearAppBadge();
+  if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+
+/* ---- sync queue + badge to IndexedDB (sw.js drains it when the app is closed) ---- */
+let remT6=null;
+function remSync(){clearTimeout(remT6);remT6=setTimeout(remSyncNow,900);}
+async function remSyncNow(){try{await kvSet('q',st.rem.on?remItems():[]);await kvSet('badge',st.rem.on?badgeN():0);}catch(e){}
+ updateBadge();}
+async function regPeriodic(){const r=await swReg();if(!r||!('periodicSync' in r))return;
+ try{if(st.rem.on)await r.periodicSync.register('wk-rem',{minInterval:12*36e5});
+  else await r.periodicSync.unregister('wk-rem');}catch(e){/* engagement-gated — fine */}}
+
+/* ---- display path: prefer SW (survives tab close on Android), fall back to page ---- */
+async function notify(title,opt){const o=Object.assign({icon:'./icon-192.png',badge:'./icon-192.png'},opt);
+ try{const r=await swReg();if(r&&r.showNotification){await r.showNotification(title,o);return true;}}catch(e){}
+ try{const n=new Notification(title,o);
+  n.onclick=()=>{try{window.focus();const t=(o.data||{}).tab;if(TABS6.includes(t)){app.tab=t;app.sess=null;render();}}catch(e){}};
+  return true;}catch(e){return false;}}
+async function remTick(){if(!st.rem.on||!HASN||Notification.permission!=='granted')return;
+ let fired;try{fired=(await kvGet('fired'))||{};}catch(e){fired={};}
+ const now=Date.now();let hit=false;
+ for(const it of remItems()){if(it.at>now||now>(it.exp||it.at)||fired[it.id])continue;
+  fired[it.id]=now;hit=true;await notify(it.title,{body:it.body,tag:it.id,data:{tab:it.tab}});}
+ if(hit){for(const k in fired)if(now-fired[k]>7*864e5)delete fired[k];
+  try{await kvSet('fired',fired);}catch(e){}}
+ updateBadge();}
+setInterval(remTick,45000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){remTick();remSync();}});
+
+/* ---- permission + enable (the welcome doubles as today's brief, so no double-fire) ---- */
+async function remEnable(){
+ if(!HASN)return toast('Notifications not supported here — use Add to Calendar below');
+ let p=Notification.permission;
+ if(p==='default')p=await new Promise(res=>{try{const r=Notification.requestPermission(v=>res(v));
+  if(r&&r.then)r.then(res);}catch(e){res('denied');}});
+ if(p!=='granted'){render();return toast(p==='denied'?'Blocked — allow notifications for this app in Settings':'Permission not granted');}
+ st.rem.on=true;
+ const a=assignFor(todayStr());
+ let fired;try{fired=(await kvGet('fired'))||{};}catch(e){fired={};}
+ if(parseL(todayStr(),st.rem.t).getTime()<=Date.now())fired['am:'+todayStr()]=Date.now();
+ try{await kvSet('fired',fired);}catch(e){}
+ save('Reminders on');await remSyncNow();regPeriodic();
+ notify((a.k==='GAME'?'🏀 ':'')+a.t,{body:'Reminders on — daily brief at '+clock(parseL(todayStr(),st.rem.t))+'. '+(a.s||'').slice(0,80),tag:'am:'+todayStr(),data:{tab:'today'}});
+ render();}
+
+/* ---- .ics bridge — native Calendar alarms fire even if this app is never opened ---- */
+function icsFold(l){let out='';while(l.length>72){out+=l.slice(0,72)+'\r\n ';l=l.slice(72);}return out+l;}
+function buildICS(){
+ const now=new Date(),t0=todayStr();
+ const stamp=now.getUTCFullYear()+P2(now.getUTCMonth()+1)+P2(now.getUTCDate())+'T'+P2(now.getUTCHours())+P2(now.getUTCMinutes())+P2(now.getUTCSeconds())+'Z';
+ const E=s=>String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+ const T=(ds,hm)=>ds.replace(/-/g,'')+'T'+hm.replace(':','')+'00';
+ const addMin=(ds,hm,mm)=>{const d=parseL(ds,hm);d.setMinutes(d.getMinutes()+mm);
+  return dsOf(d).replace(/-/g,'')+'T'+P2(d.getHours())+P2(d.getMinutes())+'00';};
+ const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//WK Coach//Block Reminders//EN','CALSCALE:GREGORIAN','X-WR-CALNAME:WK Coach'];
+ const push=(...ls)=>ls.forEach(x=>L.push(icsFold(x)));
+ const alarm=(mins,txt)=>push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+E(txt),'TRIGGER:-PT'+mins+'M','END:VALARM');
+ for(const ds of Object.keys(CAL)){if(ds<t0)continue;const a=CAL[ds];
+  push('BEGIN:VEVENT','UID:wk-day-'+ds+'@wk-coach','DTSTAMP:'+stamp,
+   'DTSTART:'+T(ds,st.rem.t),'DTEND:'+addMin(ds,st.rem.t,15),
+   'SUMMARY:'+E('WK · '+a.t),'DESCRIPTION:'+E(a.s));
+  alarm(0,a.t);push('END:VEVENT');}
+ for(const w of[1,2,3,4,5,6,0]){const a=BUILD_WK[w];
+  const d=parseL(PHASE3);while(d.getDay()!==w)d.setDate(d.getDate()+1);const ds=dsOf(d);
+  push('BEGIN:VEVENT','UID:wk-build-'+w+'@wk-coach','DTSTAMP:'+stamp,
+   'DTSTART:'+T(ds,st.rem.t),'DTEND:'+addMin(ds,st.rem.t,15),
+   'RRULE:FREQ=WEEKLY;COUNT=8','SUMMARY:'+E('WK · '+a.t),'DESCRIPTION:'+E('BUILD phase · '+a.s));
+  alarm(0,a.t);push('END:VEVENT');}
+ FIX.forEach((f,i)=>{if(f.d<t0)return;const play=f.role==='PLAY';
+  push('BEGIN:VEVENT','UID:wk-fx-'+i+'@wk-coach','DTSTAMP:'+stamp,
+   'DTSTART:'+T(f.d,f.tip),'DTEND:'+addMin(f.d,f.tip,110),
+   'SUMMARY:'+E((play?'🏀 GAME · ':'👀 Support · ')+f.team+' vs '+f.opp),
+   'DESCRIPTION:'+E(play&&f.proto?'Protocol '+f.proto+' — open WK Coach → Game':'Zero physical cost.'));
+  alarm(st.rem.pre,'Tip '+f.tip+(play&&f.proto?' · Protocol '+f.proto:''));
+  if(play)alarm(30,'Start 3-phase warm-up');
+  push('END:VEVENT');});
+ push('END:VCALENDAR');
+ return L.join('\r\n')+'\r\n';}
+async function shareICS(){const txt=buildICS();
+ try{const f=new File([txt],'wk-coach-block.ics',{type:'text/calendar'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'WK Coach calendar'});
+   toast('Sent to share sheet — add to Calendar');return;}}catch(e){if(e&&e.name==='AbortError')return;}
+ try{const u=URL.createObjectURL(new Blob([txt],{type:'text/calendar'}));
+  const a=document.createElement('a');a.href=u;a.download='wk-coach-block.ics';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
+  toast('Calendar file downloaded — open it to add');}catch(e){toast('Export failed in this container');}}
+
+/* ---- Reminders card (Today tab) ---- */
+const fmtPre=p=>p>=60?((p/60)%1?(p/60).toFixed(1):p/60)+' h':p+' m';
+function remStatus(){
+ if(!HASN)return IS_APP?'This device blocks web notifications — use Add to Calendar below.':'Not available in this container — install the app (Share ▸ Add to Home Screen), or use Add to Calendar below.';
+ if(Notification.permission==='denied')return'Blocked in system settings for this app.';
+ if(IOS&&!IS_APP)return'iPhone: install to Home Screen first (Share ▸ Add to Home Screen), then enable here.';
+ if(IOS)return'Fires while the app is open + icon badge. With the app closed, iOS needs the Calendar route below.';
+ return'Fires while the app is open; the installed Android app also checks in the background (best effort).';}
+function nextRem(){if(!st.rem.on)return null;const now=Date.now();
+ return remItems().filter(x=>x.at>now).sort((a,b)=>a.at-b.at)[0]||null;}
+function remCard(){const on=st.rem.on&&HASN&&Notification.permission==='granted';
+ const nx=on?nextRem():null;
+ return `<div class="card"><h2><span class="dotp" style="background:#5AC8FA"></span>Reminders</h2>
+ <div class="remrow"><div class="rl"><b>Notifications</b><div class="sub">${remStatus()}</div></div>
+  <button class="togl ${on?'on':''}" id="remTgl" role="switch" aria-checked="${on}" aria-label="Toggle reminders"></button></div>
+ ${on?`<div class="remrow"><div class="rl"><b>Morning brief</b><div class="sub">today's assignment + gate nudge</div></div>
+  <input type="time" id="remT" value="${st.rem.t}" aria-label="Morning brief time"></div>
+ <div class="remrow"><div class="rl"><b>Game alert</b><div class="sub">before tip-off</div></div>
+  <div class="stp"><button data-rp="-30">−</button><span class="v num">${fmtPre(st.rem.pre)}</span><button data-rp="30">+</button></div></div>
+ <div class="remrow"><div class="rl"><b>Daily-8 evening nudge</b><div class="sub">${st.rem.d8?'skips itself once checked off':'off'}</div></div>
+  ${st.rem.d8?`<input type="time" id="remD8t" value="${st.rem.d8t}" aria-label="Daily-8 nudge time">`:''}
+  <button class="togl ${st.rem.d8?'on':''}" id="remD8" role="switch" aria-checked="${st.rem.d8}" aria-label="Toggle Daily-8 nudge"></button></div>
+ <div class="btnrow" style="margin-top:8px"><button class="btn small" id="remTest">Test notification</button>
+  ${nx?`<span class="chip">next · ${fmtShort(dsOf(new Date(nx.at)))} ${clock(new Date(nx.at))}</span>`:''}</div>`:''}
+ <hr class="hr">
+ <div class="remrow"><div class="rl"><b>Add block to Calendar</b><div class="sub">daily briefs + game tip alarms in your phone's Calendar — fires even if you never open this app</div></div>
+  <button class="btn small primary" id="icsGo">.ics</button></div></div>`;}
+function bindRem(){
+ const tg=document.getElementById('remTgl');if(tg)tg.onclick=()=>{
+  if(st.rem.on){st.rem.on=false;save('Reminders off');remSyncNow();regPeriodic();render();}
+  else remEnable();};
+ const t=document.getElementById('remT');if(t)t.onchange=()=>{if(/^\d{2}:\d{2}$/.test(t.value)){st.rem.t=t.value;save('Morning brief '+t.value);render();}};
+ document.querySelectorAll('[data-rp]').forEach(b=>b.onclick=()=>{
+  st.rem.pre=Math.min(360,Math.max(30,st.rem.pre+ +b.dataset.rp));save();render();});
+ const d8=document.getElementById('remD8');if(d8)d8.onclick=()=>{st.rem.d8=!st.rem.d8;save();render();};
+ const dt=document.getElementById('remD8t');if(dt)dt.onchange=()=>{if(/^\d{2}:\d{2}$/.test(dt.value)){st.rem.d8t=dt.value;save();render();}};
+ const ts=document.getElementById('remTest');if(ts)ts.onclick=async()=>{
+  const ok=await notify('WK Coach — test',{body:assignFor(todayStr()).t+' · reminders will look like this',tag:'test',data:{tab:'today'}});
+  toast(ok?'Sent — check your notifications':'Could not display — check system settings');};
+ const ic=document.getElementById('icsGo');if(ic)ic.onclick=shareICS;}
+
+/* ---- wire-in ---- */
+const _sv6=save;save=function(msg){touchStreak();_sv6(msg);remSync();};
+const _hc6=heroCard;heroCard=function(){let h=_hc6();const n=streakLive();
+ if(n>=1)h=h.replace('<div class="h-chips">',
+  '<div class="h-chips"><span class="vpill streak">🔥 '+n+'-DAY'+(st.streak.fz?' · ❄'+st.streak.fz:'')+'</span>');
+ return h;};
+const _vT6=vToday;vToday=function(){return _vT6()+remCard();};
+const _bT6=bindToday;bindToday=function(){_bT6();bindRem();};
+const _st6=startTimer;startTimer=function(sec){_st6(sec);clearTimeout(startTimer._n);
+ startTimer._n=setTimeout(()=>{const el=document.getElementById('timer');
+  if(el&&el.classList.contains('on')&&tLeft<=0&&document.visibilityState==='hidden'
+   &&st.rem.on&&HASN&&Notification.permission==='granted')notify('Rest over — GO',{tag:'rest',data:{tab:'train'}});},sec*1000+300);};
+const _dc7=dataCard;dataCard=function(){return _dc7().replace('V5 · GLASS · HIG PASS','V6 · REMINDERS + STREAK');};
+
+/* notification tap → deep link (SW relay or #hash on cold open) */
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{
+ const t=(e.data||{}).nav;if(TABS6.includes(t)){app.tab=t;app.sess=null;render();}});
+{const h=location.hash.replace('#','');if(TABS6.includes(h))app.tab=h;}
+
+window.addEventListener('load',()=>setTimeout(()=>{ensureV3();touchStreak();remSyncNow();regPeriodic();remTick();},900));
 render();
 </script>
 </body>
